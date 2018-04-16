@@ -15,8 +15,8 @@ public class SpeakersHandler extends Thread{
 	private int bufferSize = 512;
 	private byte[] buffer;
 	//	Sound playback variables	
-	private boolean shouldPlay=true;
-	private boolean hasSound=true;
+	private boolean shouldPlay = true;
+	private boolean bufferPlayed = true;
 	
 	public SpeakersHandler() {
 		this.buffer = new byte[bufferSize];
@@ -25,17 +25,40 @@ public class SpeakersHandler extends Thread{
 	
 	public void writeBuffer(byte[] soundBytes) {
 		this.buffer = soundBytes;
-		this.hasSound=true;
+		this.bufferPlayed=true;
+	}
+	
+	public synchronized void playSound() {
+		while(bufferPlayed) {
+			try {
+				wait();
+			}catch(InterruptedException exc ) {
+				
+			}
+		}
+		speakers.write(this.buffer, 0, buffer.length);
+		bufferPlayed=true;
+		notify();
+	}
+	public synchronized void readSound(byte[] sound) {
+		notify();
+		while(!bufferPlayed) {
+			try {
+				wait();
+			}catch(Exception ex) {
+				
+			}
+		}
+		System.out.println("writing: " + this.buffer);
+		this.buffer=sound;
+		bufferPlayed=false;
 	}
 	
 	public void run() {
 		System.out.println("Running speakers");
 		if(shouldPlay) {System.out.println("Ready to go");}
-		while(shouldPlay) {			
-			if(this.hasSound) {
-				speakers.write(this.buffer, 0, bufferSize);
-				//this.hasSound=false;
-				}
+		while(shouldPlay) {
+				playSound();
 		}
 		speakers.drain();
 		speakers.stop();

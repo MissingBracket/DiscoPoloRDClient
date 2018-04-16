@@ -16,6 +16,8 @@ public class MicHandler extends Thread{
 	private byte[] buffer;
 	private boolean lineInUse=true;	
 	
+	private boolean bufferUsed = false;
+	
 	public MicHandler() {
 		buffer = new byte[512];
 		setup();
@@ -39,17 +41,37 @@ public class MicHandler extends Thread{
 			lineInUse=false;
 		}
 	}
-	public byte[] getbuffer() {
+	public synchronized byte[] getbuffer() {
+		notify();
+		while(bufferUsed) {
+			try {
+				wait();
+			}catch(InterruptedException e) {
+				System.out.println("That's enough");
+			}
+		}
+		bufferUsed = true;
 		return this.buffer;
 	}
+	public synchronized void getMicrophoneStream() {
+		while(!bufferUsed) {
+			try {
+				wait();
+			} catch (InterruptedException e) {
+				System.out.println("Can we stop those try / catch please?");
+			}
+		}			
+		systemMicrophone.read(buffer, 0, bufferSize);
+		bufferUsed = false;
+		notify();
+	}
 	
-	public void run() {
-		
+	public void run() {		
 		if(!lineInUse) {
 			System.out.println("Can't begin recording");
 		}else
 		while(lineInUse) {
-			systemMicrophone.read(buffer, 0, bufferSize);
+			getMicrophoneStream();
 		}
 		systemMicrophone.stop();
 		systemMicrophone.close();

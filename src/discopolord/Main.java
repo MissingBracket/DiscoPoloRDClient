@@ -2,8 +2,8 @@ package discopolord;
 
 import java.io.IOException;
 
-import communication.hardware.MicHandler;
-import communication.hardware.SpeakersHandler;
+import communication.UDPListener;
+import communication.UDPTransmitter;
 
 public class Main {	
 	
@@ -15,9 +15,9 @@ public class Main {
 				new ClientLogic(addr, port).start();
 			} catch (IOException e) {
 				System.out.println("Could not connect to server with given:\n[ADDR@"+addr+"]\n[PORT@"+port+"]\n");
-				new MicHandler().start();
-				new SpeakersHandler().start();
 				
+				new UDPListener(addr, port).start();
+				new UDPTransmitter(addr, port+1).start();				
 			}
 	}
 	
