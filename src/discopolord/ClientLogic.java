@@ -6,9 +6,14 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.List;
 
-import communication.UDPListener;
-import communication.UDPTransmitter;
+import javax.management.RuntimeErrorException;
+
+import misc.Log;
+import protocol.Succ;
+import protocol.Succ.Message.LoginData;
+import protocol.Succ.Message.MessageType;
 
 public class ClientLogic extends Thread{
 	//	Network
@@ -29,44 +34,52 @@ public class ClientLogic extends Thread{
 	}
 	//	Main thread logic
 	public void run() {
-		
+		Succ.Message response;
 		int streamStatus= 1;initialiseStreams();
-		logSuccess("Running Client");
+		Log.success("Running Client");
 		if(streamStatus > 0) {
+			//	Connecting to server - implementation of SUCC connection
 			try {
-				logSuccess("received " + receivePacket());
-				//	Server SUCC connection
-				logInfo("Starting client logic threads");
-				//	Temporary - for testing purposes
-				new UDPListener(addr,port).start();
-				new UDPTransmitter(addr, port).start();
+				//	LOGIN
+				Log.info("Sending Login request");
+				Succ.Message.newBuilder()
+				.setMessageType(MessageType.LOGIN)
+						.setLoginData(LoginData.newBuilder()
+								.setEmail(DegbugConstants.email)
+								.setPassword(DegbugConstants.pass))
+						.build().writeTo(outgoingStream);
+				response = Succ.Message.parseFrom(socket.getInputStream());
+				if(!response.getMessageType().equals(MessageType.AUTH)) {
+					throw new IOException("User not authorised");
+				}
+				
+				Succ.Message.newBuilder()
+					.setMessageType(MessageType.C_REQ)
+					.build().writeTo(outgoingStream);
+				
+				response = Succ.Message.parseFrom(socket.getInputStream());
+				List<Succ.Message.UserAddress> contacts = null;
+				
+				if(response.getMessageType().equals(MessageType.C_LIST))
+					contacts = response.getAddressesList();
+				else throw new IOException("Failed to get contacts list");
 				
 			} catch (IOException e) {
-				logError("Could not reach Server");
+				Log.failure("Could not reach Server: " + e.getMessage());
 			}			
 		}
 		else
-			logError("Could not initialise communication streams");	
+			Log.failure("Could not initialise communication streams");
 	}
 	
-	// Logs given message preceded with Error either Success tag or Debug information
-	public static void logError(String a) {
-		System.out.println("[ERR] " + a);
-	}
-	public static void logSuccess(String a) {
-		System.out.println("[SUCC] " + a);
-	}
-	public static void logInfo(String a) {
-		System.out.println("[INFO] " + a);
-	}
 	//	Send packet through socket
 	public void sendPacket(String packet) throws IOException {
 		outgoingStream.writeBytes(packet);
 	}
 	//	Attempt to receive incoming transmission
 	public String receivePacket() throws IOException {
-		//return ingoingStream.readLine();
-		return "Success";
+		return ingoingStream.readLine();
+		//return "Success";
 	}
 	//	Unnecessarily verbose stream initialisation
 	public int initialiseStreams() {
@@ -79,11 +92,15 @@ public class ClientLogic extends Thread{
 							socket.getInputStream()));
 			
 		} catch (IOException e) {
-			logError("Failed to initialise outgoing and ingoing stream");
+			Log.failure("Failed to initialise outgoing and ingoing stream");
 			return -1;
 		}
 		return 1;
 	}
-	
+	public static class DegbugConstants{
+		public static String email = "rowan@kinson.com";
+		public static String pass = "sup3rS3cr3tPassword";
+		
+	}
 	
 }
