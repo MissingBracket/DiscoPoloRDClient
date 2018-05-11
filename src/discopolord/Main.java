@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import communication.UDPListener;
 import communication.UDPTransmitter;
+import gui.GUI;
 import misc.Log;
 
 public class Main {	
@@ -20,9 +21,10 @@ public class Main {
 			} catch (IOException e) {
 				//	Display in popup window
 				System.out.println("Could not connect to server with given:\n[ADDR@"+addr+"]\n[PORT@"+port+"]\n");
-								
+				new GUI(0.045);		
+				/*		
 				new UDPListener(addr, port).start();
-				new UDPTransmitter(addr, port).start();
+				new UDPTransmitter(addr, port).start();*/
 				/*DiffieHellman dh = new DiffieHellman();
 				dh.generateKeys();	
 				SoundHandler handler = new SoundHandler();
