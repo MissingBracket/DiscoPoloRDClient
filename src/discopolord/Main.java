@@ -2,8 +2,8 @@ package discopolord;
 
 import java.io.IOException;
 
-import discopolord.security.DiffieHellman;
-import gui.SoundHandler;
+import communication.UDPListener;
+import communication.UDPTransmitter;
 import misc.Log;
 
 public class Main {	
@@ -20,15 +20,15 @@ public class Main {
 			} catch (IOException e) {
 				//	Display in popup window
 				System.out.println("Could not connect to server with given:\n[ADDR@"+addr+"]\n[PORT@"+port+"]\n");
-				/*				
+								
 				new UDPListener(addr, port).start();
-				new UDPTransmitter(addr, port+1).start();*/
-				DiffieHellman dh = new DiffieHellman();
+				new UDPTransmitter(addr, port).start();
+				/*DiffieHellman dh = new DiffieHellman();
 				dh.generateKeys();	
 				SoundHandler handler = new SoundHandler();
 				handler.registerSound("startup", "thomas.wav");
 				handler.prepareSound("startup");
-				handler.start();
+				handler.start();*/
 				Log.info("Out of program");
 			}
 	}

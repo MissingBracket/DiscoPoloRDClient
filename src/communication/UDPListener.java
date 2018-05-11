@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
+import java.util.LinkedList;
+import java.util.List;
 
 import communication.hardware.SpeakersHandler;
 
@@ -13,6 +15,8 @@ public class UDPListener extends Thread{
 	private int bufferSize = 512; // default buffer size
 	
 	byte inBuffer[];
+	//	Buffer for sound packets
+	List<byte[]> packetBuffer;
 	//	Iteration controller
 	private boolean isConnected = true;
 	//	Connection information
@@ -26,6 +30,7 @@ public class UDPListener extends Thread{
 		this.port = port;
 		inBuffer = new byte[bufferSize];
 		speakers = new SpeakersHandler();
+		packetBuffer = new LinkedList<>();
 	}
 	
 	public void run() {
@@ -42,15 +47,18 @@ public class UDPListener extends Thread{
 		}
 		while(isConnected) {
 			try {
-				//logDebug("Listening @:"+port);
 				incomingData = new DatagramPacket(inBuffer, bufferSize);
 				listeningSocket.receive(incomingData);
-				speakers.readSound(incomingData.getData());
-				//data = new String(incomingData.getData());
+				
+				packetBuffer.add(incomingData.getData());
+				
+				if(!packetBuffer.isEmpty()) 
+					speakers.readSound(packetBuffer.remove(0));					
+				
+				
 				logDebug("Received: data");
 			} catch (IOException e) {
 				logError("No data was received due to: " + e.getMessage());
-				//isConnected=false;
 			}
 		}
 		listeningSocket.close();
