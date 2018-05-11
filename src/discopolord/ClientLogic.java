@@ -40,6 +40,8 @@ public class ClientLogic extends Thread{
 		if(streamStatus > 0) {
 			//	Connecting to server - implementation of SUCC connection
 			try {
+				//	DIFFIE-HELLMAN KEY NEGOTIATION
+				
 				//	LOGIN
 				Log.info("Sending Login request");
 				Succ.Message.newBuilder()
@@ -52,7 +54,7 @@ public class ClientLogic extends Thread{
 				if(!response.getMessageType().equals(MessageType.AUTH)) {
 					throw new IOException("User not authorised");
 				}
-				
+				//	REQUEST CONTACTS LIST
 				Succ.Message.newBuilder()
 					.setMessageType(MessageType.C_REQ)
 					.build().writeTo(outgoingStream);
