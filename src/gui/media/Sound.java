@@ -13,17 +13,33 @@ import javax.sound.sampled.LineEvent;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
-public class Sound {
+public class Sound extends Thread{
 	private String soundPath;
-	 private final Path wavPath;
+	private final Path wavPath;
 	    
-	    private final CyclicBarrier barrier = new CyclicBarrier(2);
+	private final CyclicBarrier barrier = new CyclicBarrier(2);
+	
 	public Sound(String sound) {
 		this.soundPath = sound;
 		wavPath = Paths.get("./src/media/"+soundPath);
 	}
 	public String getSoundName() {
 		return soundPath;
+	}
+	
+	public void run() {
+		try {
+			this.play();
+		} catch (LineUnavailableException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedAudioFileException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	public void play() throws LineUnavailableException, IOException, UnsupportedAudioFileException {
@@ -34,6 +50,7 @@ public class Sound {
             clip.open(audioIn);
             clip.start();
             waitForSoundEnd();
+            clip.stop();
         }
     }
 

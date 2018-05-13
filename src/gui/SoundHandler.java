@@ -10,7 +10,7 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 import gui.media.Sound;
 import misc.Log;
 
-public class SoundHandler extends Thread{
+public class SoundHandler {
 	//	Sound playback related variables
 	Map<String, Sound> sounds;
 	Sound soundToPlay;
@@ -31,12 +31,22 @@ public class SoundHandler extends Thread{
 		return soundToPlay.getSoundName();
 	}
 	
-	public void run() {
-		try {
+	public void stopPlaying(String s) {
+		sounds.get(s).interrupt();
+		Sound replace = new Sound(sounds.get(s).getSoundName());
+		sounds.remove(s);
+		sounds.put(s, replace);
+	}
+	public void playSound(String s) {
+		sounds.get(s).start();
+		
+		/*try {
 			soundToPlay.play();
+			Log.info("finished playing?");
+			
 		} catch (LineUnavailableException | IOException | UnsupportedAudioFileException e) {
 			Log.failure("Could not play sound due to " + e.getLocalizedMessage());
+		}*/
 		}
-	}
 	
 }

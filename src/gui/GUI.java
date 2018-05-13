@@ -2,7 +2,6 @@ package gui;
 
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.TextArea;
 import java.awt.event.ActionEvent;
@@ -22,40 +21,46 @@ import javax.swing.JTextField;
 import javax.swing.WindowConstants;
 
 import discopolord.ClientLogic;
+import misc.Log;
 
 public class GUI {
-	private boolean isLogged = false;
+	private boolean isLogged = false,
+			isCalling = false;
 	private JFrame loggingWindow;
 	private JFrame registerWindow;
 	private JFrame mainWindow;
+	JFrame callingNotifier;
 	private JTabbedPane tabbedPane;
 	private double version;
 	private ClientLogic logic;
 	private SoundHandler guiSounds;
-	
+	JTable contactsTable;
 	
 	public GUI(double d, ClientLogic cl) {
 		version = d;
 		buildLoginWindows();
-
-	    /*this.logic = cl;
-	    	cl.start();*/
+		SetupMainWindow();
+	    this.logic = cl;
+	    	
 		guiSounds = new SoundHandler();
-		guiSounds.registerSound("startup", "startup.wav");
-		
-		
-		
-		
+		guiSounds.registerSound("startup", "startup.wav");		
+		guiSounds.registerSound("dialing", "thomas.wav");		
+		if(!isLogged)
+			loggingWindow.setVisible(true);
+		else
+			mainWindow.setVisible(true);
+	}
+	
+	public void SetupMainWindow() {
 		mainWindow = new JFrame("DiscoPoloRD v: " + version);
 		mainWindow.setSize(450, 500);
 		mainWindow.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		mainWindow.setLayout(new FlowLayout());
 		JLabel logo = new JLabel(new ImageIcon("./src/media/logo.png"));
 		logo.setPreferredSize(new Dimension(400, 200));
-		mainWindow.add(logo);
+		mainWindow.add(logo);		
 		
-		
-		mainWindow.add(new JButton("Call"));
+		mainWindow.add(getCallButton());
 		
 		mainWindow.add(new JButton("Shite"));
 		
@@ -83,14 +88,52 @@ public class GUI {
 		                      "Does nothing at all");
 		tabbedPane.setMnemonicAt(3, KeyEvent.VK_4);
 		mainWindow.add(tabbedPane);
-		
-		//mainWindow.setContentPane(pane);
-		
-		if(!isLogged)
-			loggingWindow.setVisible(true);
-		else
-			mainWindow.setVisible(true);
 	}
+	 public JButton getCallButton() {
+		 JButton callButton = new JButton("Call");
+		 callButton.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				
+				
+				if(!isCalling) {
+				Log.info("Begin calling: " + 
+						contactsTable.getValueAt(
+								contactsTable.getSelectedRow(),
+								contactsTable.getSelectedColumn()).toString());
+				guiSounds.prepareSound("dialing");
+				Log.info(guiSounds.getCurrentSound());
+				callingNotifier = new JFrame("Dialing: " + contactsTable.getValueAt(
+						contactsTable.getSelectedRow(),
+						contactsTable.getSelectedColumn()).toString());
+				callingNotifier.setLayout(new FlowLayout());
+				callingNotifier.setPreferredSize(new Dimension(400, 300));
+				JTextField info = new JTextField("Come on, pickup the phone!");
+				info.setEditable(false);
+				JLabel logo = new JLabel(new ImageIcon("./src/media/logo.png"));
+				//logo.setPreferredSize(new Dimension(400, 300));
+				callingNotifier.add(logo);
+				callingNotifier.add(info);
+				
+				callingNotifier.pack();
+				
+				callingNotifier.setVisible(true);
+				guiSounds.playSound("dialing");
+				isCalling = true;
+				}else {
+					guiSounds.stopPlaying("dialing");
+					Log.info("Dialing terminated");
+					isCalling = false;
+					callingNotifier.dispose();
+					callingNotifier.setVisible(false);
+				}
+			}
+		});
+		 
+		 return callButton;
+	 }
+	
 	
 	public void buildLoginWindows() {
 		this.loggingWindow = new JFrame("Sign in to DiscoPoloRD");
@@ -115,7 +158,7 @@ public class GUI {
 				loggingWindow.dispose();
 				mainWindow.setVisible(true);
 				guiSounds.prepareSound("startup");
-				guiSounds.start();
+				guiSounds.playSound("startup");
 			}
 		});
 		
@@ -128,18 +171,22 @@ public class GUI {
 				loggingWindow.dispose();
 				loggingWindow.setVisible(false);
 				registerWindow = new JFrame("Sign up with DiscoPoloRD");
-				registerWindow.setPreferredSize(new Dimension(400, 450));
+				registerWindow.setPreferredSize(new Dimension(400, 550));
 				JButton accept = new JButton("Register"),
 						signin = new JButton("Login");
-				JTextField registerNickBox = new JTextField();
-				JTextField registerEmailBox = new JTextField();
+				JTextField registerNickBox = new JTextField(),
+							registerEmailBox = new JTextField(),
+							registerIDBox = new JTextField();
 				
 				JPasswordField registerPassBox = new JPasswordField();
 				JPasswordField registerPassBoxCheck = new JPasswordField();
-				JLabel 	r_l =  new JLabel("E-mail:"), 
+				JLabel 	r_l =  new JLabel("E-mail:"),
+						r_n = new JLabel("Nick:"),
+						r_id = new JLabel("Unique ID:"),
 						r_p = new JLabel("Password:"),
 						r_pCheck = new JLabel("Repeat Password:");
 				registerNickBox.setPreferredSize(new Dimension(350, 25));
+				registerIDBox.setPreferredSize(new Dimension(350, 25));
 				registerEmailBox.setPreferredSize(new Dimension(350, 25));
 				registerPassBox.setPreferredSize(new Dimension(350, 25));
 				registerPassBoxCheck.setPreferredSize(new Dimension(350, 25));
@@ -158,7 +205,7 @@ public class GUI {
 						registerWindow.dispose();
 						mainWindow.setVisible(true);
 						guiSounds.prepareSound("startup");
-						guiSounds.start();
+						guiSounds.playSound("startup");
 					}
 				});
 				signin.addActionListener(new ActionListener() {
@@ -176,6 +223,10 @@ public class GUI {
 				logo.setPreferredSize(new Dimension(400, 200));
 				registerWindow.add(logo);
 				registerWindow.setLayout(new FlowLayout());
+				registerWindow.add(r_n);
+				registerWindow.add(registerNickBox);
+				registerWindow.add(r_id);
+				registerWindow.add(registerIDBox);
 				registerWindow.add(r_l);
 				registerWindow.add(registerEmailBox);				
 				registerWindow.add(r_p);
@@ -223,26 +274,26 @@ public class GUI {
 	            "# of Years",
 	            "Vegetarian"};
 		Object[][] data = {
-			    {"Kathy", "Smith",
-			     "Snowboarding", new Integer(5), new Boolean(false)},
-			    {"John", "Doe",
-			     "Rowing", new Integer(3), new Boolean(true)},
-			    {"Sue", "Black",
-			     "Knitting", new Integer(2), new Boolean(false)},
-			    {"Jane", "White",
-			     "Speed reading", new Integer(20), new Boolean(true)},
-			    {"Joe", "Brown",
-			     "Pool", new Integer(10), new Boolean(false)}
+			    {"Krystian", "Minta",
+			     "SooPerGo5ciu", new Integer(5), new Boolean(false)},
+			    {"Mrystian", "Kinta",
+			     "GramWLolaIksD", new Integer(3), new Boolean(true)},
+			    {"Trystan", "Kwinta",
+			     "FemaleCatSlayer", new Integer(2), new Boolean(false)},
+			    {"Wyspa", "Clinta",
+			     "BenTenInches", new Integer(20), new Boolean(true)},
+			    {"Browar", "Pinta",
+			     "BrowarTowar", new Integer(10), new Boolean(false)}
 			};
-		JTable table = new JTable(data, columnNames);
-		panel.add(table);
-		return panel;	
+		contactsTable = new JTable(data, columnNames);
+		panel.add(contactsTable);
+		return panel;
 	}
 	
 	public void register(String nick, String email, char[] password) {
 		
 	}
 	public void login(String nick, char[] password) {
-		
+
 	}
 }

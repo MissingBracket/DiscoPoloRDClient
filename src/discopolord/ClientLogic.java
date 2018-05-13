@@ -78,7 +78,7 @@ public class ClientLogic extends Thread{
 					}
 				}
 				while(true){
-					
+					//	Connection Keeping
 				}
 				//Log.success("Completed one session");
 			} catch (IOException e) {
