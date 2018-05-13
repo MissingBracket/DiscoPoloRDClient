@@ -8,6 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import communication.hardware.SpeakersHandler;
+import misc.Log;
 
 public class UDPListener extends Thread{
 	
@@ -41,33 +42,26 @@ public class UDPListener extends Thread{
 			listeningSocket.setSoTimeout(3000);
 			
 		} catch (SocketException e1) {
-			logError("Failed to initialise Listening Socket");
+			Log.failure("Failed to initialise Listening Socket");
 			e1.printStackTrace();
 			isConnected=false;
 		}
 		while(isConnected) {
 			try {
 				incomingData = new DatagramPacket(inBuffer, bufferSize);
-				listeningSocket.receive(incomingData);
-				
-				packetBuffer.add(incomingData.getData());
-				
+				listeningSocket.receive(incomingData);				
+				packetBuffer.add(incomingData.getData());				
 				if(!packetBuffer.isEmpty()) 
-					speakers.readSound(packetBuffer.remove(0));					
-				
-				
-				logDebug("Received: data");
+					speakers.readSound(packetBuffer.remove(0));
+				Log.info("Received: data");
 			} catch (IOException e) {
-				logError("No data was received due to: " + e.getMessage());
+				Log.failure("No data was received due to: " + e.getMessage());
+				if(!packetBuffer.isEmpty()) {
+					Log.failure("Playing from Buffer");
+					speakers.readSound(packetBuffer.remove(0));
+				}					
 			}
 		}
 		listeningSocket.close();
-	}
-	
-	public void logError(String a) {
-		System.out.println("[L_ERR]@"+addr+":"+port+"\n:>"+a);
-	}
-	public void logDebug(String a) {
-		System.out.println("[L_DBG]@"+addr+":"+port+"\n:>"+a);
 	}
 }

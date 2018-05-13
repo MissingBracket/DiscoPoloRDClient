@@ -47,25 +47,40 @@ public class ClientLogic extends Thread{
 				Succ.Message.newBuilder()
 				.setMessageType(MessageType.LOGIN)
 						.setLoginData(LoginData.newBuilder()
-								.setEmail(DegbugConstants.email)
-								.setPassword(DegbugConstants.pass))
-						.build().writeTo(outgoingStream);
-				response = Succ.Message.parseFrom(socket.getInputStream());
-				if(!response.getMessageType().equals(MessageType.AUTH)) {
+								.setEmail(DegbugConstants.testmail)
+								.setPassword(DegbugConstants.testpass))
+						.build().writeDelimitedTo(outgoingStream);
+				
+				Log.info("Login req sent");
+				
+				response = Succ.Message.parseDelimitedFrom(socket.getInputStream());
+				
+				if(response != null && !response.getMessageType().equals(MessageType.AUTH)) {
 					throw new IOException("User not authorised");
 				}
 				//	REQUEST CONTACTS LIST
+				Log.info("Sending cList req");
 				Succ.Message.newBuilder()
 					.setMessageType(MessageType.C_REQ)
-					.build().writeTo(outgoingStream);
+					.build().writeDelimitedTo(outgoingStream);
 				
-				response = Succ.Message.parseFrom(socket.getInputStream());
+				response = Succ.Message.parseDelimitedFrom(socket.getInputStream());
 				List<Succ.Message.UserAddress> contacts = null;
+				//Succ.Message d = Succ.Message.parseDelimitedFrom(socket.getInputStream());
 				
-				if(response.getMessageType().equals(MessageType.C_LIST))
+				
+				if(response != null && response.getMessageType().equals(MessageType.C_LIST))
 					contacts = response.getAddressesList();
 				else throw new IOException("Failed to get contacts list");
-				
+				if(!contacts.isEmpty()) {
+					for(Succ.Message.UserAddress a : contacts) {
+						Log.info(a.getIp());
+					}
+				}
+				while(true){
+					
+				}
+				//Log.success("Completed one session");
 			} catch (IOException e) {
 				Log.failure("Could not reach Server: " + e.getMessage());
 			}			
@@ -100,6 +115,9 @@ public class ClientLogic extends Thread{
 		return 1;
 	}
 	public static class DegbugConstants{
+		public static String testmail = "krowa@krowa.pl";
+		public static String testpass = "krowa";
+		
 		public static String email = "rowan@kinson.com";
 		public static String pass = "sup3rS3cr3tPassword";
 		
