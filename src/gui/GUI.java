@@ -1,5 +1,6 @@
 package gui;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
@@ -53,7 +54,8 @@ public class GUI {
 	
 	public void SetupMainWindow() {
 		mainWindow = new JFrame("DiscoPoloRD v: " + version);
-		mainWindow.setSize(450, 500);
+		mainWindow.setSize(450, 700);
+		mainWindow.getContentPane().setBackground(Color.DARK_GRAY);
 		mainWindow.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		mainWindow.setLayout(new FlowLayout());
 		JLabel logo = new JLabel(new ImageIcon("./src/media/logo.png"));
@@ -82,7 +84,9 @@ public class GUI {
 
 		JComponent panel4 = makeTextPanel(
 		        "asdasdasdasdasdsa");
-		//panel4.setPreferredSize(new Dimension(410, 50));
+		
+		panel4.setLayout(new GridLayout(2, 1));
+		panel4.add(new JLabel(new ImageIcon("./src/media/polbud.png")));
 		panel4.add(new TextArea("Projekt Komunikatora G³osowego\nWykonanie:\n\tDariusz Krajewski - klient\n\tKrystian Minta - server"));
 		tabbedPane.addTab("O projekcie", null, panel4,
 		                      "Does nothing at all");
