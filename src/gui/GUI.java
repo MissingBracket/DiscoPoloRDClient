@@ -21,6 +21,8 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.WindowConstants;
 
+import com.sun.org.omg.CORBA.InitializerSeqHelper;
+
 import discopolord.ClientLogic;
 import misc.Log;
 
@@ -42,7 +44,7 @@ public class GUI {
 		buildLoginWindows();
 		SetupMainWindow();
 	    this.logic = cl;
-	    	
+
 		guiSounds = new SoundHandler();
 		guiSounds.registerSound("startup", "startup.wav");		
 		guiSounds.registerSound("dialing", "thomas.wav");		
@@ -157,9 +159,14 @@ public class GUI {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				login(loginBox.getText(), passwordBox.getPassword());
-				isLogged = true;
+				isLogged = logic.connectToServer(loginBox.getText(), new String(passwordBox.getPassword()));
+				Log.success("Logged is: " + isLogged);
 				loggingWindow.setVisible(false);
 				loggingWindow.dispose();
+				if(!isLogged) {
+					buildLoginWindows();
+					return;
+				}
 				mainWindow.setVisible(true);
 				guiSounds.prepareSound("startup");
 				guiSounds.playSound("startup");
