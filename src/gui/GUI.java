@@ -99,10 +99,12 @@ public class GUI {
 		Log.info("Prepared contacts table");
 		contactsTable = new JTable(data, columns);
 	}
-	public static void incomingCallEventHandler(boolean pickedUp) {
+	public static void incomingCallEventHandler(boolean pickedUp, int port, String ip) {
 		if(pickedUp) {
 			if(isCalling) {
 				info.setText("Connected! Remember to listen");
+				guiSounds.stopPlaying("dialing");
+				logic.beginConversation(port, ip);
 			}
 		}else {
 			callingNotifier.dispose();
@@ -121,13 +123,14 @@ public class GUI {
 		logo.setPreferredSize(new Dimension(400, 200));
 		acceptCall.add(logo);		
 		JButton acc = new JButton("Pick up");
-		JButton den = new JButton("Pick up");
+		JButton den = new JButton("Deny");
 		
 		acc.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				logic.beginConversation(port, addr);
+				logic.acceptConversation(freePort);
+				//logic.beginConversation(freePort, addr);
 				
 			}
 		});

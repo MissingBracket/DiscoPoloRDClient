@@ -87,10 +87,12 @@ public class ClientLogic extends Thread{
 			case CL_DEN:
 				Log.info("Failed shite");
 				
-				GUI.incomingCallEventHandler(false);
+				GUI.incomingCallEventHandler(false, 0, "null");
 				break;				
 			case ADR:
-				GUI.incomingCallEventHandler(true);
+				GUI.incomingCallEventHandler(true, 
+						response.getAddressesList().get(0).getPort(),
+						response.getAddressesList().get(0).getIp());
 				break;
 			default:
 				break;
@@ -99,14 +101,19 @@ public class ClientLogic extends Thread{
 	}
 	
 	public void beginConversation(int port, String addr) {
-		listener = 	new UDPListener(addr+1, port);
+		
+		Log.info("Picked Up");
+		listener = 	new UDPListener(addr, port+1);
 		transmitter = new UDPTransmitter(addr, port);
-		sendMessage(Succ.Message.newBuilder()
-				.setMessageType(MessageType.ADR)
-				.addAddresses(Succ.Message.UserAddress.newBuilder().setPort(port+1)
-						.build()).build());
+		
 		listener.start();
 		transmitter.start();
+	}
+	public void acceptConversation(int port) {
+		sendMessage(Succ.Message.newBuilder()
+				.setMessageType(MessageType.CL_ACC)
+				.addAddresses(Succ.Message.UserAddress.newBuilder().setPort(port)
+						.build()).build());
 	}
 	
 	public void endConversation() {
