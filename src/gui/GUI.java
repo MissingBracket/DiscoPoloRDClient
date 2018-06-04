@@ -8,6 +8,7 @@ import java.awt.TextArea;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.util.List;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -21,29 +22,38 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.WindowConstants;
 
-import com.sun.org.omg.CORBA.InitializerSeqHelper;
+import com.sun.javafx.scene.control.ControlAcceleratorSupport;
 
 import discopolord.ClientLogic;
 import misc.Log;
+import protocol.Succ;
 
 public class GUI {
-	private boolean isLogged = false,
-			isCalling = false;
+	private boolean isLogged = false;
+	private static boolean isCalling = false;
+	private static boolean isInCall = false;
 	private JFrame loggingWindow;
 	private JFrame registerWindow;
 	private JFrame mainWindow;
-	JFrame callingNotifier;
+	private static JFrame callingNotifier;
+	private static JTextField info;
 	private JTabbedPane tabbedPane;
 	private double version;
-	private ClientLogic logic;
-	private SoundHandler guiSounds;
-	JTable contactsTable;
-	
+	private static ClientLogic logic;
+	private static SoundHandler guiSounds;
+
+	private static JTable contactsTable;
+	private static String incAddr;
+	private static int incPort;
+	public static boolean incomingCall;
+	//	Should be found by system
+	private static int freePort = 10000;
 	public GUI(double d, ClientLogic cl) {
 		version = d;
+		this.logic = cl;
 		buildLoginWindows();
-		SetupMainWindow();
-	    this.logic = cl;
+		//SetupMainWindow();
+	    
 
 		guiSounds = new SoundHandler();
 		guiSounds.registerSound("startup", "startup.wav");		
@@ -52,9 +62,96 @@ public class GUI {
 			loggingWindow.setVisible(true);
 		else
 			mainWindow.setVisible(true);
+		
+	}
+	
+	public static void callAccepted(int port, String addr, String who) {
+		JFrame callFrame = new JFrame("Speaking with " + who);
+		if(!isInCall)
+		{	
+			callFrame.setSize(450, 700);
+			callFrame.getContentPane().setBackground(Color.DARK_GRAY);
+			callFrame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+			callFrame.setLayout(new FlowLayout());
+			JLabel logo = new JLabel(new ImageIcon("./src/media/logo.png"));
+			logo.setPreferredSize(new Dimension(400, 200));
+			callFrame.add(logo);
+			callFrame.setVisible(true);			
+			
+			isInCall=true;
+		}
+		else {
+			callFrame.setVisible(true);
+			isInCall=false;
+		}
+	}
+	public static void initialiseContacts(List<Succ.Message.UserStatus> users) {
+		Log.info("Creating contacts");
+		String [] columns = {"Uzytkownik", "ID", "Status"};
+		Object [][] data = new Object[users.size()][3];
+	
+		for(int i =0; i < users.size(); i++) {
+			Log.info("Adding user: " + users.get(i).getUsername());
+			data[i][0] = users.get(i).getUsername();
+			data[i][1] = users.get(i).getIdentifier();
+			data[i][2] = users.get(i).getStatus();
+		}
+		Log.info("Prepared contacts table");
+		contactsTable = new JTable(data, columns);
+	}
+	public static void incomingCallEventHandler(boolean pickedUp) {
+		if(pickedUp) {
+			if(isCalling) {
+				info.setText("Connected! Remember to listen");
+			}
+		}else {
+			callingNotifier.dispose();
+			callingNotifier.setVisible(false);
+			isCalling=pickedUp;
+			guiSounds.stopPlaying("dialing");
+		}
+	}
+	
+	public static void receivingCall(int port, String addr, String who) {
+		JFrame acceptCall = new JFrame("Incoming call from " + who);
+		acceptCall.setSize(450, 450);
+		acceptCall.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+		acceptCall.setLayout(new FlowLayout());
+		JLabel logo = new JLabel(new ImageIcon("./src/media/logo.png"));
+		logo.setPreferredSize(new Dimension(400, 200));
+		acceptCall.add(logo);		
+		JButton acc = new JButton("Pick up");
+		JButton den = new JButton("Pick up");
+		
+		acc.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				logic.beginConversation(port, addr);
+				
+			}
+		});
+		
+		den.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				logic.denyCall();
+				acceptCall.dispose();
+				acceptCall.setVisible(false);
+			}
+		});
+		
+		acceptCall.add(acc);
+		acceptCall.add(den);
+		incomingCall = true;
+		acceptCall.setVisible(true);
+		incAddr=addr;
+		incPort=port;
 	}
 	
 	public void SetupMainWindow() {
+
 		mainWindow = new JFrame("DiscoPoloRD v: " + version);
 		mainWindow.setSize(450, 700);
 		mainWindow.getContentPane().setBackground(Color.DARK_GRAY);
@@ -95,14 +192,31 @@ public class GUI {
 		tabbedPane.setMnemonicAt(3, KeyEvent.VK_4);
 		mainWindow.add(tabbedPane);
 	}
-	 public JButton getCallButton() {
+	
+	public void showCallingDialog() {
+		JFrame callDialog = new JFrame("Incoming Call");
+		callDialog.setPreferredSize(new Dimension(400, 400));
+		callDialog.setLayout(new FlowLayout());		
+		JButton acc = new JButton("Pick up");		
+		
+		acc.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				logic.beginConversation(incPort, incAddr);
+			}
+		});
+		
+		callDialog.add(acc);
+		callDialog.setVisible(true);
+	}
+	
+	public JButton getCallButton() {
 		 JButton callButton = new JButton("Call");
 		 callButton.addActionListener(new ActionListener() {
 			
 			@Override
-			public void actionPerformed(ActionEvent e) {
-				
-				
+			public void actionPerformed(ActionEvent e) {				
 				if(!isCalling) {
 				Log.info("Begin calling: " + 
 						contactsTable.getValueAt(
@@ -112,10 +226,11 @@ public class GUI {
 				Log.info(guiSounds.getCurrentSound());
 				callingNotifier = new JFrame("Dialing: " + contactsTable.getValueAt(
 						contactsTable.getSelectedRow(),
-						contactsTable.getSelectedColumn()).toString());
+						1).toString());
 				callingNotifier.setLayout(new FlowLayout());
+				
 				callingNotifier.setPreferredSize(new Dimension(400, 300));
-				JTextField info = new JTextField("Come on, pickup the phone!");
+				info = new JTextField("Come on, pickup the phone!");
 				info.setEditable(false);
 				JLabel logo = new JLabel(new ImageIcon("./src/media/logo.png"));
 				//logo.setPreferredSize(new Dimension(400, 300));
@@ -127,6 +242,10 @@ public class GUI {
 				callingNotifier.setVisible(true);
 				guiSounds.playSound("dialing");
 				isCalling = true;
+				logic.connectTo(contactsTable.getValueAt(
+						contactsTable.getSelectedRow(),
+						1).toString(), 
+						freePort);
 				}else {
 					guiSounds.stopPlaying("dialing");
 					Log.info("Dialing terminated");
@@ -144,6 +263,7 @@ public class GUI {
 	public void buildLoginWindows() {
 		this.loggingWindow = new JFrame("Sign in to DiscoPoloRD");
 		loggingWindow.setSize(400, 400);
+		loggingWindow.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		JTextField loginBox = new JTextField();
 		JPasswordField passwordBox = new JPasswordField();
 		JLabel 	l =  new JLabel("E-mail:"), 
@@ -167,9 +287,11 @@ public class GUI {
 					buildLoginWindows();
 					return;
 				}
+				SetupMainWindow();
 				mainWindow.setVisible(true);
 				guiSounds.prepareSound("startup");
 				guiSounds.playSound("startup");
+				logic.start();
 			}
 		});
 		
@@ -277,9 +399,9 @@ public class GUI {
 	    //panel.add(filler);
 	    return panel;
 	}
-	private JComponent makeContactsTable() {
+	public static JComponent makeContactsTable() {
 		JPanel panel = new JPanel(false);
-		String[] columnNames = {"First Name",
+		/*String[] columnNames = {"First Name",
 	            "Last Name",
 	            "Sport",
 	            "# of Years",
@@ -296,7 +418,7 @@ public class GUI {
 			    {"Browar", "Pinta",
 			     "BrowarTowar", new Integer(10), new Boolean(false)}
 			};
-		contactsTable = new JTable(data, columnNames);
+		contactsTable = new JTable(data, columnNames);*/
 		panel.add(contactsTable);
 		return panel;
 	}

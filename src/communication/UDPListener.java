@@ -33,7 +33,9 @@ public class UDPListener extends Thread{
 		speakers = new SpeakersHandler();
 		packetBuffer = new LinkedList<>();
 	}
-	
+	public void close() {
+		this.isConnected=false;
+	}
 	public void run() {
 		speakers.start();
 		DatagramPacket incomingData = new DatagramPacket(inBuffer, bufferSize);

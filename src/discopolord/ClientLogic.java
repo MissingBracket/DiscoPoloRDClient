@@ -20,18 +20,23 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.omg.PortableInterceptor.SUCCESSFUL;
+
 import com.google.protobuf.ByteString;
 
+import communication.UDPListener;
+import communication.UDPTransmitter;
 import discopolord.security.DHClient;
+import gui.GUI;
 import misc.Log;
 import protocol.Succ;
 import protocol.Succ.Message.LoginData;
 import protocol.Succ.Message.MessageType;
 
-public class ClientLogic {
+public class ClientLogic extends Thread{
 	//	Network
 	private Socket socket;
-	
+	private int freePort = 10000;
 	private String addr;
 	private int port;
 	//	TCP Streams for Server connection
@@ -40,8 +45,10 @@ public class ClientLogic {
 	//	Security / encryption related variables
 	private Cipher aesCipher,aesDeCipher;
 	private String clientSecret;
-	private IvParameterSpec serverIV;
+	
 	private AlgorithmParameters servIV;
+	private UDPListener listener;
+	private UDPTransmitter transmitter;
 	//	Constructor
 	public ClientLogic(String addr, int port) throws UnknownHostException, IOException, NoSuchAlgorithmException, NoSuchPaddingException {
 		this.socket=new Socket(addr, port);
@@ -51,6 +58,62 @@ public class ClientLogic {
 		aesDeCipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
 	}
 	//	Main thread logic
+	public void connectTo(String ID, int port) {
+		Log.info("Begin calling: " + ID);
+		sendMessage(Succ.Message.newBuilder()
+				.setMessageType(MessageType.CL_INV)
+				.addAddresses(Succ.Message.UserAddress.newBuilder()
+						.setPort(port)
+						.setUserIdentifier(ID)
+						.build())
+				.build());
+	}
+	public void denyCall() {
+		sendMessage(Succ.Message.newBuilder()
+				.setMessageType(MessageType.CL_DEN)
+				.build());
+				
+	}
+	public void run() {
+		while(true) {
+			Succ.Message response = getMessage();
+			switch(response.getMessageType()) {
+			case CL_INV:
+				GUI.receivingCall(
+						response.getAddressesList().get(0).getPort(), 
+						response.getAddressesList().get(0).getIp(),
+						response.getAddressesList().get(0).getUserIdentifier());
+				break;
+			case CL_DEN:
+				Log.info("Failed shite");
+				
+				GUI.incomingCallEventHandler(false);
+				break;				
+			case ADR:
+				GUI.incomingCallEventHandler(true);
+				break;
+			default:
+				break;
+			}
+		}
+	}
+	
+	public void beginConversation(int port, String addr) {
+		listener = 	new UDPListener(addr+1, port);
+		transmitter = new UDPTransmitter(addr, port);
+		sendMessage(Succ.Message.newBuilder()
+				.setMessageType(MessageType.ADR)
+				.addAddresses(Succ.Message.UserAddress.newBuilder().setPort(port+1)
+						.build()).build());
+		listener.start();
+		transmitter.start();
+	}
+	
+	public void endConversation() {
+		listener.close();
+		transmitter.close();
+	}
+	
 	public boolean connectToServer(String email, String password) {
 		Succ.Message response;
 		int streamStatus= 1;
@@ -130,22 +193,28 @@ public class ClientLogic {
 				response = getMessage(); 
 						
 						//Succ.Message.parseDelimitedFrom(socket.getInputStream());
-				List<Succ.Message.UserAddress> contacts = null;
+				List<Succ.Message.UserStatus> contacts = null;
 				//Succ.Message d = Succ.Message.parseDelimitedFrom(socket.getInputStream());
 				
 				
-				if(response != null && response.getMessageType().equals(MessageType.C_LIST))
-					contacts = response.getAddressesList();
+				if(response != null && response.getMessageType().equals(MessageType.C_LIST)) {
+					Log.info("User has contacts");
+					//contacts = response.getUsersList();
+					GUI.initialiseContacts(response.getUsersList());
+					//GUI.makeContactsTable();
+				}					
 				else throw new IOException("Failed to get contacts list");
-				if(!contacts.isEmpty()) {
-					for(Succ.Message.UserAddress a : contacts) {
-						Log.info(a.getIp());
+				/*if(!contacts.isEmpty()) {
+					for(Succ.Message.UserStatus a : contacts) {
+						Log.info("Received Contact: ");
+						Log.info(a.getIdentifier());
 					}
-				}
+				}*/
 				return true;
 				//Log.success("Completed one session");
 			} catch (Exception e) {
-				Log.failure("Could not reach Server: " + e.getMessage());
+				Log.failure("Could not reach Server: " + e.getMessage() + " / " + e.getClass() + " / " + e.getLocalizedMessage());
+				e.printStackTrace();
 				return false;
 			}			
 		}
@@ -167,6 +236,7 @@ public class ClientLogic {
 	}
 	public Succ.Message getMessage(){
 		//initialiseDecrypter(serverIV);
+		Log.info("Receiving");
 		byte[] buffer = new byte[256];
 		try {
 			int received  = socket.getInputStream().read(buffer);			

@@ -53,7 +53,9 @@ public class UDPTransmitter extends Thread{
 		}
 		
 	}	
-	
+	public void close() {
+		this.isConnected=false;
+	}
 	public void logError(String a) {
 		System.out.println("[T_ERR]@"+addr+":"+port+"\n:>"+a);
 	}
