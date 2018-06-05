@@ -48,6 +48,7 @@ public class UDPListener extends Thread{
 			e1.printStackTrace();
 			isConnected=false;
 		}
+		Log.info("Listening from " + port);
 		while(isConnected) {
 			try {
 				incomingData = new DatagramPacket(inBuffer, bufferSize);

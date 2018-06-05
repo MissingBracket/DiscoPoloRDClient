@@ -12,6 +12,7 @@ import java.util.List;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -21,8 +22,6 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.WindowConstants;
-
-import com.sun.javafx.scene.control.ControlAcceleratorSupport;
 
 import discopolord.ClientLogic;
 import misc.Log;
@@ -47,7 +46,7 @@ public class GUI {
 	private static int incPort;
 	public static boolean incomingCall;
 	//	Should be found by system
-	private static int freePort = 10000;
+	public static int freePort = 10000;
 	public GUI(double d, ClientLogic cl) {
 		version = d;
 		this.logic = cl;
@@ -101,11 +100,15 @@ public class GUI {
 	}
 	public static void incomingCallEventHandler(boolean pickedUp, int port, String ip) {
 		if(pickedUp) {
-			if(isCalling) {
+			isInCall=true;
+			if(isCalling) //{
 				info.setText("Connected! Remember to listen");
-				guiSounds.stopPlaying("dialing");
-				logic.beginConversation(port, ip);
+			else {
+				
 			}
+			//guiSounds.stopPlaying("dialing");
+			logic.beginConversation(port, ip);
+			//}
 		}else {
 			callingNotifier.dispose();
 			callingNotifier.setVisible(false);
@@ -139,9 +142,15 @@ public class GUI {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				logic.denyCall();
+				if(!isInCall)
+					logic.denyCall();
+				else {
+					logic.endConvo();
+					logic.endConversation();
+				}
 				acceptCall.dispose();
 				acceptCall.setVisible(false);
+				
 			}
 		});
 		
@@ -166,7 +175,7 @@ public class GUI {
 		
 		mainWindow.add(getCallButton());
 		
-		mainWindow.add(new JButton("Shite"));
+		//mainWindow.add(new JButton("Shite"));
 		
 		tabbedPane = new JTabbedPane();
 		JComponent panel1 = makeContactsTable();
@@ -402,6 +411,27 @@ public class GUI {
 	    //panel.add(filler);
 	    return panel;
 	}
+	public JComponent makeSearchWindow() {
+		JPanel panel = new JPanel();
+		panel.setLayout(new FlowLayout());
+		panel.add(new JLabel("Kogo dodajemy?"));
+		JTextField searchbox = new JTextField();
+		panel.add(searchbox);
+		JButton search = new JButton("Poczuj przyjazn!");
+		search.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				logic.searchContact(searchbox.getText());
+			}
+		});
+		
+		panel.add(search);
+		
+		return panel;
+	}
+	
 	public static JComponent makeContactsTable() {
 		JPanel panel = new JPanel(false);
 		/*String[] columnNames = {"First Name",

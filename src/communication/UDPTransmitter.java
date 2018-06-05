@@ -6,6 +6,7 @@ import java.net.InetAddress;
 import java.net.SocketException;
 
 import communication.hardware.MicHandler;
+import misc.Log;
 
 public class UDPTransmitter extends Thread{
 	
@@ -38,6 +39,7 @@ public class UDPTransmitter extends Thread{
 			isConnected=false;
 		}
 		outBuffer = "hello!".getBytes();
+		Log.info("transmitting to " + port);
 			while(isConnected) {			
 				try {				
 					outBuffer = microphoneHandler.getbuffer();

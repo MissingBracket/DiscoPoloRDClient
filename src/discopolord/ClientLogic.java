@@ -90,30 +90,44 @@ public class ClientLogic extends Thread{
 				GUI.incomingCallEventHandler(false, 0, "null");
 				break;				
 			case ADR:
+				Log.info("Beginning call");
 				GUI.incomingCallEventHandler(true, 
 						response.getAddressesList().get(0).getPort(),
 						response.getAddressesList().get(0).getIp());
+				break;
+			case DISC:
+				endConversation();
 				break;
 			default:
 				break;
 			}
 		}
 	}
-	
+	public void endConvo() {
+		sendMessage(Succ.Message.newBuilder().setMessageType(MessageType.DISC).build());
+	}
 	public void beginConversation(int port, String addr) {
 		
-		Log.info("Picked Up");
-		listener = 	new UDPListener(addr, port+1);
+		Log.info("Picked Up: " + addr +  " / " + port);
+		listener = 	new UDPListener(addr, GUI.freePort);
 		transmitter = new UDPTransmitter(addr, port);
 		
 		listener.start();
 		transmitter.start();
 	}
+	
+	public void searchContact(String contact) {
+		//sendMessage(Succ.Message.newBuilder().setMessageType(MessageType.));
+		Log.info("Would search " + contact);
+	}
+	
 	public void acceptConversation(int port) {
 		sendMessage(Succ.Message.newBuilder()
 				.setMessageType(MessageType.CL_ACC)
 				.addAddresses(Succ.Message.UserAddress.newBuilder().setPort(port)
 						.build()).build());
+		
+		
 	}
 	
 	public void endConversation() {
