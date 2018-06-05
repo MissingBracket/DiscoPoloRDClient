@@ -101,12 +101,14 @@ public class GUI {
 	public static void incomingCallEventHandler(boolean pickedUp, int port, String ip) {
 		if(pickedUp) {
 			isInCall=true;
-			if(isCalling) //{
+			if(isCalling) {
 				info.setText("Connected! Remember to listen");
-			else {
-				
+				guiSounds.stopPlaying("dialing");
 			}
-			//guiSounds.stopPlaying("dialing");
+			else {
+				guiSounds.stopPlaying("dialing");
+			}
+			//
 			logic.beginConversation(port, ip);
 			//}
 		}else {
@@ -127,7 +129,8 @@ public class GUI {
 		acceptCall.add(logo);		
 		JButton acc = new JButton("Pick up");
 		JButton den = new JButton("Deny");
-		
+		guiSounds.prepareSound("dialing");
+		guiSounds.playSound("dialing");
 		acc.addActionListener(new ActionListener() {
 			
 			@Override
@@ -142,15 +145,15 @@ public class GUI {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if(!isInCall)
+				if(!isInCall) {
 					logic.denyCall();
+				}				
 				else {
 					logic.endConvo();
 					logic.endConversation();
 				}
 				acceptCall.dispose();
 				acceptCall.setVisible(false);
-				
 			}
 		});
 		
