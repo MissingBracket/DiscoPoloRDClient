@@ -6,6 +6,8 @@ import javax.sound.sampled.DataLine;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.TargetDataLine;
 
+import misc.Log;
+
 public class MicHandler extends Thread{
 	//	Get system audio in
 	private TargetDataLine systemMicrophone;
@@ -23,6 +25,10 @@ public class MicHandler extends Thread{
 		setup();
 		if(lineInUse)System.out.println("Mic running");
 	}
+	public void disengage() {
+		Log.info("Closing microphone line");
+		lineInUse=false;
+	}
 	
 	public void failsafe() {
 		this.lineInUse=false;
@@ -33,11 +39,13 @@ public class MicHandler extends Thread{
 		DataLine.Info info = new DataLine.Info(TargetDataLine.class, soundFormat);
 		try {
 		systemMicrophone = (TargetDataLine)AudioSystem.getLine(info);
-		
+		if(systemMicrophone.isOpen())
+			systemMicrophone.close();
 		systemMicrophone.open();
 		systemMicrophone.start();
 		}catch(LineUnavailableException exc) {
 			System.out.println("Failed to load system microphone line");
+			exc.printStackTrace();
 			lineInUse=false;
 		}
 	}

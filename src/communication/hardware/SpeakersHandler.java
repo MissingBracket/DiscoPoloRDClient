@@ -6,6 +6,8 @@ import javax.sound.sampled.DataLine;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 
+import misc.Log;
+
 public class SpeakersHandler extends Thread{
 	//	Get system audio in
 	private SourceDataLine speakers=null;
@@ -27,7 +29,10 @@ public class SpeakersHandler extends Thread{
 		this.buffer = soundBytes;
 		this.bufferPlayed=true;
 	}
-	
+	public void disengage() {
+		Log.info("Stopping speakers line");
+		this.shouldPlay=false;
+	}
 	public synchronized void playSound() {
 		while(bufferPlayed) {
 			try {
@@ -62,7 +67,8 @@ public class SpeakersHandler extends Thread{
 		}
 		speakers.drain();
 		speakers.stop();
-		speakers.close();		
+		speakers.close();
+		Log.info("Speakers disengaged");
 	}
 	
 	private void setup()  {

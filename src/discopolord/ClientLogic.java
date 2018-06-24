@@ -49,6 +49,7 @@ public class ClientLogic extends Thread{
 	private AlgorithmParameters servIV;
 	private UDPListener listener;
 	private UDPTransmitter transmitter;
+	private boolean connectionSecured = false;
 	//	Constructor
 	public ClientLogic(String addr, int port) throws UnknownHostException, IOException, NoSuchAlgorithmException, NoSuchPaddingException {
 		this.socket=new Socket(addr, port);
@@ -96,7 +97,9 @@ public class ClientLogic extends Thread{
 						response.getAddressesList().get(0).getIp());
 				break;
 			case DISC:
-				endConversation();
+				//	Someone else wants to disconnect so false
+				// 	endConversation(false);
+				GUI.disconnectedWith();
 				break;
 			default:
 				break;
@@ -129,8 +132,12 @@ public class ClientLogic extends Thread{
 		
 		
 	}
-	
-	public void endConversation() {
+	//	boolean describes WHO wants to disconnect.
+	//	This user or someone else
+	public void endConversation(boolean userHangedUp) {
+		Log.info("Exiting listener and transmitter");
+		if(userHangedUp)
+			sendMessage(Succ.Message.newBuilder().setMessageType(MessageType.DISC).build());
 		listener.close();
 		transmitter.close();
 	}
@@ -144,6 +151,7 @@ public class ClientLogic extends Thread{
 			//	Connecting to server - implementation of SUCC connection
 			try {
 				//	DIFFIE-HELLMAN KEY NEGOTIATION
+				if(!connectionSecured) {
 				response  = Succ.Message.parseDelimitedFrom(socket.getInputStream());
 				
 				DHClient dhClient = new DHClient();
@@ -178,7 +186,8 @@ public class ClientLogic extends Thread{
 					servIV.init(response.getEPS().toByteArray());
 				}
 				initialiseDecrypter();
-				
+				connectionSecured = true;
+				}
 				
 				//	LOGIN
 				Log.info("Sending Login request");

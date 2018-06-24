@@ -27,6 +27,7 @@ public class UDPListener extends Thread{
 	private SpeakersHandler speakers;
 	
 	public UDPListener(String addr, int port) {
+		Log.info("New Speaker Handler");
 		this.addr = addr;
 		this.port = port;
 		inBuffer = new byte[bufferSize];
@@ -65,6 +66,8 @@ public class UDPListener extends Thread{
 				}					
 			}
 		}
+		
+		speakers.disengage();
 		listeningSocket.close();
 	}
 }

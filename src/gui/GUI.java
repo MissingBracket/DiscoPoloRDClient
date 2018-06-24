@@ -9,6 +9,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.util.List;
+import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -57,6 +58,12 @@ public class GUI {
 		guiSounds = new SoundHandler();
 		guiSounds.registerSound("startup", "startup.wav");		
 		guiSounds.registerSound("dialing", "thomas.wav");		
+		
+		/*while(!isLogged) {
+			buildLoginWindows();
+			loggingWindow.setVisible(true);
+		}
+		mainWindow.setVisible(true);*/
 		if(!isLogged)
 			loggingWindow.setVisible(true);
 		else
@@ -83,6 +90,18 @@ public class GUI {
 			callFrame.setVisible(true);
 			isInCall=false;
 		}
+	}
+	//	Called when other side hangs up
+	public static void disconnectedWith() {
+		//	Someone else disconnected so false
+		logic.endConversation(false);
+		callingNotifier.dispose();
+		isCalling=false;
+	}
+	//	Called when hanging up
+	public static void wantsToDisconnect() {
+		//	This user wants to disconnect
+		logic.endConversation(true);
 	}
 	public static void initialiseContacts(List<Succ.Message.UserStatus> users) {
 		Log.info("Creating contacts");
@@ -149,8 +168,8 @@ public class GUI {
 					logic.denyCall();
 				}				
 				else {
-					logic.endConvo();
-					logic.endConversation();
+					//logic.endConvo();
+					logic.endConversation(true);
 				}
 				acceptCall.dispose();
 				acceptCall.setVisible(false);
@@ -186,7 +205,8 @@ public class GUI {
 		                  "To be Filled");
 		tabbedPane.setMnemonicAt(0, KeyEvent.VK_1);
 
-		JComponent panel2 = makeTextPanel("Panel #2");
+		JComponent panel2 = makeSearchWindow(); 
+				//makeTextPanel("Panel #2");
 		tabbedPane.addTab("Szukaj", null, panel2,
 		                  "To be filled");
 		tabbedPane.setMnemonicAt(1, KeyEvent.VK_2);
@@ -257,6 +277,7 @@ public class GUI {
 				callingNotifier.setVisible(true);
 				guiSounds.playSound("dialing");
 				isCalling = true;
+					
 				logic.connectTo(contactsTable.getValueAt(
 						contactsTable.getSelectedRow(),
 						1).toString(), 
@@ -296,17 +317,20 @@ public class GUI {
 				login(loginBox.getText(), passwordBox.getPassword());
 				isLogged = logic.connectToServer(loginBox.getText(), new String(passwordBox.getPassword()));
 				Log.success("Logged is: " + isLogged);
-				loggingWindow.setVisible(false);
-				loggingWindow.dispose();
-				if(!isLogged) {
-					buildLoginWindows();
-					return;
+				
+				if(!isLogged) {					
+					//buildLoginWindows();					
 				}
-				SetupMainWindow();
-				mainWindow.setVisible(true);
-				guiSounds.prepareSound("startup");
-				guiSounds.playSound("startup");
-				logic.start();
+				else {
+					loggingWindow.setVisible(false);
+					loggingWindow.dispose();
+					SetupMainWindow();
+					mainWindow.setVisible(true);
+					guiSounds.prepareSound("startup");
+					guiSounds.playSound("startup");
+					logic.start();	
+				}
+				
 			}
 		});
 		
@@ -419,6 +443,8 @@ public class GUI {
 		panel.setLayout(new FlowLayout());
 		panel.add(new JLabel("Kogo dodajemy?"));
 		JTextField searchbox = new JTextField();
+		searchbox.setPreferredSize(new Dimension(200, 25));
+		//loginBox.setPreferredSize(new Dimension(350, 25));
 		panel.add(searchbox);
 		JButton search = new JButton("Poczuj przyjazn!");
 		search.addActionListener(new ActionListener() {

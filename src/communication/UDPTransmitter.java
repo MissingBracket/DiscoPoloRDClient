@@ -23,6 +23,7 @@ public class UDPTransmitter extends Thread{
 	private MicHandler microphoneHandler;
 	
 	public UDPTransmitter(String addr, int port) {
+		Log.info("New Mic Handler");
 		this.addr = addr;
 		this.port = port;
 		outBuffer = new byte[bufferSize];
@@ -38,7 +39,7 @@ public class UDPTransmitter extends Thread{
 			logError("Failed to initialiste Transmitting Datagram Socket");
 			isConnected=false;
 		}
-		outBuffer = "hello!".getBytes();
+		//outBuffer = "hello!".getBytes();
 		Log.info("transmitting to " + port);
 			while(isConnected) {			
 				try {				
@@ -53,7 +54,11 @@ public class UDPTransmitter extends Thread{
 					transmittingSocket.close();	
 				}*/
 		}
-		
+			
+			microphoneHandler.disengage();
+			Log.info("Disabling mic");
+			transmittingSocket.close();
+			//microphoneHandler.stop();
 	}	
 	public void close() {
 		this.isConnected=false;
