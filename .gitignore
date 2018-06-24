@@ -2,3 +2,5 @@
 *.wav
 
 *.png
+*bin/
+.idea/
