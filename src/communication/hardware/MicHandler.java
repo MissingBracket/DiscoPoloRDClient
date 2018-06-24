@@ -25,9 +25,12 @@ public class MicHandler extends Thread{
 		setup();
 		if(lineInUse)System.out.println("Mic running");
 	}
-	public void disengage() {
+	public synchronized void disengage() {
 		Log.info("Closing microphone line");
-		lineInUse=false;
+		this.lineInUse=false;
+		notify();
+		systemMicrophone.stop();
+		systemMicrophone.close();
 	}
 	
 	public void failsafe() {
@@ -81,8 +84,8 @@ public class MicHandler extends Thread{
 		while(lineInUse) {
 			getMicrophoneStream();
 		}
-		systemMicrophone.stop();
-		systemMicrophone.close();
+		/*systemMicrophone.stop();
+		systemMicrophone.close();*/
 		System.out.println("Mic disengaged");
 	}
 }

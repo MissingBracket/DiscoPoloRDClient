@@ -47,6 +47,7 @@ public class GUI {
 	private static int incPort;
 	public static boolean incomingCall;
 	//	Should be found by system
+	
 	public static int freePort = 10000;
 	public GUI(double d, ClientLogic cl) {
 		version = d;
@@ -96,6 +97,8 @@ public class GUI {
 		//	Someone else disconnected so false
 		logic.endConversation(false);
 		callingNotifier.dispose();
+		//if(!isInCall)
+			guiSounds.stopPlaying("dialing");
 		isCalling=false;
 	}
 	//	Called when hanging up
@@ -127,9 +130,8 @@ public class GUI {
 			else {
 				guiSounds.stopPlaying("dialing");
 			}
-			//
 			logic.beginConversation(port, ip);
-			//}
+		
 		}else {
 			callingNotifier.dispose();
 			callingNotifier.setVisible(false);
@@ -139,13 +141,13 @@ public class GUI {
 	}
 	
 	public static void receivingCall(int port, String addr, String who) {
-		JFrame acceptCall = new JFrame("Incoming call from " + who);
-		acceptCall.setSize(450, 450);
-		acceptCall.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-		acceptCall.setLayout(new FlowLayout());
+		callingNotifier = new JFrame("Incoming call from " + who);
+		callingNotifier.setSize(400, 300);
+		callingNotifier.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+		callingNotifier.setLayout(new FlowLayout());
 		JLabel logo = new JLabel(new ImageIcon("./src/media/logo.png"));
 		logo.setPreferredSize(new Dimension(400, 200));
-		acceptCall.add(logo);		
+		callingNotifier.add(logo);		
 		JButton acc = new JButton("Pick up");
 		JButton den = new JButton("Deny");
 		guiSounds.prepareSound("dialing");
@@ -155,8 +157,7 @@ public class GUI {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				logic.acceptConversation(freePort);
-				//logic.beginConversation(freePort, addr);
-				
+				den.setText("Hang up");				
 			}
 		});
 		
@@ -165,21 +166,23 @@ public class GUI {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if(!isInCall) {
+					Log.info("Would reject");
 					logic.denyCall();
+					guiSounds.stopPlaying("dialing");
 				}				
 				else {
-					//logic.endConvo();
+					Log.info("Hanging up");
 					logic.endConversation(true);
 				}
-				acceptCall.dispose();
-				acceptCall.setVisible(false);
+				callingNotifier.dispose();
+				callingNotifier.setVisible(false);
 			}
 		});
 		
-		acceptCall.add(acc);
-		acceptCall.add(den);
+		callingNotifier.add(acc);
+		callingNotifier.add(den);
 		incomingCall = true;
-		acceptCall.setVisible(true);
+		callingNotifier.setVisible(true);
 		incAddr=addr;
 		incPort=port;
 	}
@@ -271,7 +274,21 @@ public class GUI {
 				//logo.setPreferredSize(new Dimension(400, 300));
 				callingNotifier.add(logo);
 				callingNotifier.add(info);
+				//	BEGIN
+				JButton hangUp = new JButton("Hang up");
+					hangUp.addActionListener(new ActionListener() {
+						
+						@Override
+						public void actionPerformed(ActionEvent e) {
+							guiSounds.stopPlaying("dialing");
+							logic.endConversation(true);
+							callingNotifier.dispose();
+							callingNotifier.setVisible(false);
+						}
+					});
 				
+				callingNotifier.add(hangUp);
+				//	END
 				callingNotifier.pack();
 				
 				callingNotifier.setVisible(true);
@@ -287,6 +304,7 @@ public class GUI {
 					Log.info("Dialing terminated");
 					isCalling = false;
 					callingNotifier.dispose();
+					logic.endConversation(true);
 					callingNotifier.setVisible(false);
 				}
 			}
@@ -334,7 +352,6 @@ public class GUI {
 			}
 		});
 		
-		
 		JButton register = new JButton("Register");
 		register.addActionListener(new ActionListener() {
 			
@@ -370,6 +387,7 @@ public class GUI {
 						if(registerPassBox.getPassword().equals(registerPassBoxCheck.getPassword())) {
 							register(
 									registerNickBox.getText(),
+									registerIDBox.getText(),
 									registerEmailBox.getText(),
 									registerPassBox.getPassword());
 						}
@@ -484,9 +502,42 @@ public class GUI {
 		panel.add(contactsTable);
 		return panel;
 	}
+	public static void registrationStatus(boolean status) {
+		JFrame dialogWindow = new JFrame("Registration status");
+		dialogWindow.setPreferredSize(new Dimension(400, 300));
 	
-	public void register(String nick, String email, char[] password) {
+		JLabel logo = new JLabel(new ImageIcon("./src/media/logo.png"));
 		
+		//logo.setPreferredSize(new Dimension(400, 300));
+		dialogWindow.add(logo);
+		JTextField message = new JTextField();
+		JButton ok = new JButton();
+		message.setEditable(false);
+		if(status) {
+			message.setText("Congratz! You can now use DPRD!");
+			ok.setText("ok :)");
+		}
+		else {
+			message.setText("Sorry, could not put You on the list :(");
+			ok.setText("ok :(");
+		}
+		
+		dialogWindow.add(message);
+		ok.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				dialogWindow.dispose();
+				dialogWindow.setVisible(false);
+			}
+		});
+		dialogWindow.add(ok);
+		
+		dialogWindow.setVisible(true);
+		
+	}
+	public void register(String nick, String ID, String email, char[] password) {
+		logic.registerUser(nick, email, ID, new String(password));
 	}
 	public void login(String nick, char[] password) {
 

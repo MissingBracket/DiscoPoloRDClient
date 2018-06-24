@@ -29,9 +29,15 @@ public class SpeakersHandler extends Thread{
 		this.buffer = soundBytes;
 		this.bufferPlayed=true;
 	}
-	public void disengage() {
+	public synchronized void disengage() {
 		Log.info("Stopping speakers line");
 		this.shouldPlay=false;
+		notify();
+		speakers.drain();
+		speakers.stop();
+		speakers.close();
+		
+		
 	}
 	public synchronized void playSound() {
 		while(bufferPlayed) {
@@ -65,9 +71,9 @@ public class SpeakersHandler extends Thread{
 		while(shouldPlay) {
 				playSound();
 		}
-		speakers.drain();
+		/*speakers.drain();
 		speakers.stop();
-		speakers.close();
+		speakers.close();*/
 		Log.info("Speakers disengaged");
 	}
 	

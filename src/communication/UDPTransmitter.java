@@ -57,6 +57,7 @@ public class UDPTransmitter extends Thread{
 			
 			microphoneHandler.disengage();
 			Log.info("Disabling mic");
+			
 			transmittingSocket.close();
 			//microphoneHandler.stop();
 	}	

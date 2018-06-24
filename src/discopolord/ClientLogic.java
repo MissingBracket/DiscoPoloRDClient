@@ -75,6 +75,18 @@ public class ClientLogic extends Thread{
 				.build());
 				
 	}
+	public void registerUser(String nick, String id, String email, String password) {
+		sendMessage(Succ.Message.newBuilder()
+				.setMessageType(MessageType.REGISTER)
+				.setRegistrationData(Succ.Message.RegistrationData.newBuilder()
+						.setUsername(nick)
+						.setEmail(email)
+						.setIdentifier(id)
+						.setPassword(password)
+						.build())
+				.build());
+	}
+	
 	public void run() {
 		while(true) {
 			Succ.Message response = getMessage();
@@ -99,7 +111,14 @@ public class ClientLogic extends Thread{
 			case DISC:
 				//	Someone else wants to disconnect so false
 				// 	endConversation(false);
+				Log.info("Received disconnect signal");
 				GUI.disconnectedWith();
+				break;
+			case REGISTRATION_SUCC:
+				GUI.registrationStatus(true);
+				break;
+			case REGISTRATION_FAILED:
+				GUI.registrationStatus(false);
 				break;
 			default:
 				break;
@@ -138,8 +157,12 @@ public class ClientLogic extends Thread{
 		Log.info("Exiting listener and transmitter");
 		if(userHangedUp)
 			sendMessage(Succ.Message.newBuilder().setMessageType(MessageType.DISC).build());
-		listener.close();
-		transmitter.close();
+		Log.info("Closing listener and transmitter");
+		if(!(listener == null || transmitter == null)) {
+			listener.close();
+			transmitter.close();	
+		}
+		
 	}
 	
 	public boolean connectToServer(String email, String password) {

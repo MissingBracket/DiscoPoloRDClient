@@ -1,14 +1,9 @@
 package gui;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.UnsupportedAudioFileException;
-
 import gui.media.Sound;
-import misc.Log;
 
 public class SoundHandler {
 	//	Sound playback related variables

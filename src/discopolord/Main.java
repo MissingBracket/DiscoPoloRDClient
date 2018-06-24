@@ -11,7 +11,10 @@ import misc.Log;
 public class Main {	
 	
 	public static void main(String[] args) {
-		String addr = /*"192.168.43.248";*/"127.0.0.1";//"150.254.145.182";
+		String addr = 
+				//"192.168.43.248";
+				//"127.0.0.1";
+				"150.254.145.182";
 		int port = 1337; // TO be read from file
 		
 			try {

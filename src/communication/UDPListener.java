@@ -68,6 +68,7 @@ public class UDPListener extends Thread{
 		}
 		
 		speakers.disengage();
+		
 		listeningSocket.close();
 	}
 }
