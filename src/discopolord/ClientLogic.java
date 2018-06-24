@@ -32,6 +32,7 @@ import misc.Log;
 import protocol.Succ;
 import protocol.Succ.Message.LoginData;
 import protocol.Succ.Message.MessageType;
+import protocol.Succ.Message.Status;
 
 public class ClientLogic extends Thread{
 	//	Network
@@ -76,6 +77,7 @@ public class ClientLogic extends Thread{
 				
 	}
 	public void registerUser(String nick, String id, String email, String password) {
+		Log.info("Registration form sending");
 		sendMessage(Succ.Message.newBuilder()
 				.setMessageType(MessageType.REGISTER)
 				.setRegistrationData(Succ.Message.RegistrationData.newBuilder()
@@ -85,6 +87,12 @@ public class ClientLogic extends Thread{
 						.setPassword(password)
 						.build())
 				.build());
+		Succ.Message response = getMessage();
+		if(response.getMessageType() == MessageType.REGISTRATION_SUCC) {
+			GUI.registrationStatus(true);
+		}else {
+			GUI.registrationStatus(false);
+		}
 	}
 	
 	public void run() {
@@ -114,12 +122,14 @@ public class ClientLogic extends Thread{
 				Log.info("Received disconnect signal");
 				GUI.disconnectedWith();
 				break;
-			case REGISTRATION_SUCC:
-				GUI.registrationStatus(true);
+			case C_UPD:
+				Log.info("Received status update prompt");
+				GUI.updateContactStatus(
+						response.getUsersList().get(0).getUsername(),
+						response.getUsersList().get(0).getIdentifier(), 
+						response.getUsersList().get(0).getStatus().toString());
 				break;
-			case REGISTRATION_FAILED:
-				GUI.registrationStatus(false);
-				break;
+			
 			default:
 				break;
 			}
@@ -139,7 +149,13 @@ public class ClientLogic extends Thread{
 	}
 	
 	public void searchContact(String contact) {
-		//sendMessage(Succ.Message.newBuilder().setMessageType(MessageType.));
+		sendMessage(Succ.Message.newBuilder()
+				.setMessageType(MessageType.C_UPD)
+				.addUsers(Succ.Message.UserStatus.newBuilder()
+						.setIdentifier(contact)
+						.setStatus(Status.FRIEND)
+						.build())
+				.build());
 		Log.info("Would search " + contact);
 	}
 	
@@ -165,6 +181,15 @@ public class ClientLogic extends Thread{
 		
 	}
 	
+	public void removeContact(String id) {
+		sendMessage(Succ.Message.newBuilder().setMessageType(MessageType.C_UPD)
+				.addUsers(Succ.Message.UserStatus.newBuilder()
+						.setIdentifier(id)
+						.setStatus(Status.DELETED)
+						.build())
+				.build());
+	}
+	
 	public boolean connectToServer(String email, String password) {
 		Succ.Message response;
 		int streamStatus= 1;
@@ -174,44 +199,40 @@ public class ClientLogic extends Thread{
 			//	Connecting to server - implementation of SUCC connection
 			try {
 				//	DIFFIE-HELLMAN KEY NEGOTIATION
-				if(!connectionSecured) {
-				response  = Succ.Message.parseDelimitedFrom(socket.getInputStream());
-				
-				DHClient dhClient = new DHClient();
-				byte [] publicKeys = dhClient.getPublicKey(response.getDH().toByteArray());
-				
-				
-				clientSecret = dhClient.getSecret();
-				Log.info("Received key: " + clientSecret);
-				
-				initialiseEncrypter();
-				
-				//sendEncrypted(
-						Succ.Message.newBuilder()
-						.setMessageType(MessageType.DHN)
-						.setDH(ByteString.copyFrom(publicKeys))
-						.setEPS(ByteString.copyFrom(aesCipher.getParameters().getEncoded()))
-						.build().writeDelimitedTo(outgoingStream);	
-				//		);
-				
+				if(email == null || password == null)
+				{
+					if(!connectionSecured) {
+					response  = Succ.Message.parseDelimitedFrom(socket.getInputStream());
 					
-					//			
-				
-				response = Succ.Message.parseDelimitedFrom(socket.getInputStream());
+					DHClient dhClient = new DHClient();
+					byte [] publicKeys = dhClient.getPublicKey(response.getDH().toByteArray());
+					
+					
+					clientSecret = dhClient.getSecret();
+					Log.info("Received key: " + clientSecret);
+					
+					initialiseEncrypter();
+					
+							Succ.Message.newBuilder()
+							.setMessageType(MessageType.DHN)
+							.setDH(ByteString.copyFrom(publicKeys))
+							.setEPS(ByteString.copyFrom(aesCipher.getParameters().getEncoded()))
+							.build().writeDelimitedTo(outgoingStream);	
 						
-						//getMessage();
-						
-						//
-				servIV = AlgorithmParameters.getInstance("AES");
-				
-				if(response.getMessageType().equals(MessageType.EP)) {
-					Log.success("Received IV: " + response.getEPS().toByteArray().length);
-					servIV.init(response.getEPS().toByteArray());
+					
+					response = Succ.Message.parseDelimitedFrom(socket.getInputStream());
+	
+					servIV = AlgorithmParameters.getInstance("AES");
+					
+					if(response.getMessageType().equals(MessageType.EP)) {
+						Log.success("Received IV: " + response.getEPS().toByteArray().length);
+						servIV.init(response.getEPS().toByteArray());
+					}
+					initialiseDecrypter();
+					connectionSecured = true;
+					}
+					return true;
 				}
-				initialiseDecrypter();
-				connectionSecured = true;
-				}
-				
 				//	LOGIN
 				Log.info("Sending Login request");
 				

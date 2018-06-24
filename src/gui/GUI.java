@@ -9,11 +9,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.util.List;
-import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -41,8 +39,9 @@ public class GUI {
 	private double version;
 	private static ClientLogic logic;
 	private static SoundHandler guiSounds;
-
+	private static Object [][] data;
 	private static JTable contactsTable;
+	private static JComponent contactsPanel;
 	private static String incAddr;
 	private static int incPort;
 	public static boolean incomingCall;
@@ -52,19 +51,13 @@ public class GUI {
 	public GUI(double d, ClientLogic cl) {
 		version = d;
 		this.logic = cl;
+		logic.connectToServer(null, null);
 		buildLoginWindows();
-		//SetupMainWindow();
-	    
-
+		
 		guiSounds = new SoundHandler();
 		guiSounds.registerSound("startup", "startup.wav");		
 		guiSounds.registerSound("dialing", "thomas.wav");		
 		
-		/*while(!isLogged) {
-			buildLoginWindows();
-			loggingWindow.setVisible(true);
-		}
-		mainWindow.setVisible(true);*/
 		if(!isLogged)
 			loggingWindow.setVisible(true);
 		else
@@ -106,10 +99,53 @@ public class GUI {
 		//	This user wants to disconnect
 		logic.endConversation(true);
 	}
+	public static boolean isContact(String id) {
+		for(Object [] line : data) {
+			if(((String)(line[1])).equals(id))
+				return true;
+		}
+		return false;
+	}
+	public static void addContactToTable(String name, String id, String status) {
+		Object [][] temp;
+		if(data.length == 0) {
+			Log.info("Adding new 0 user: " + name + " " + id + " " + status);
+			temp = new Object[1][3];
+			temp[0][0] = name;
+			temp[0][1] = id;
+			temp[0][2] = status;
+		}
+		else {
+			temp  = new Object[data.length + 1][3];
+			for(int i =0; i < data.length; i++) {
+				Log.info("Rewriting user: " + data[i][0]);
+				temp[i][0] = data[i][0];
+				temp[i][1] = data[i][1];
+				temp[i][2] = data[i][2];
+			}
+			Log.info("Adding new user: " + name + " " + id + " " + status);
+			temp[data.length][0] = name; 
+			temp[data.length][1] = id;
+			temp[data.length][2] = status;
+					
+		}
+		
+		data = temp;
+		contactsPanel.remove(contactsTable);
+		contactsTable = new JTable(data, new String[] {"Uzytkownik", "ID", "Status"});
+		contactsPanel.add(contactsTable);
+		//contactsTable.invalidate();
+		contactsTable.repaint();
+		contactsPanel.repaint();
+		//contactsTable.revalidate();
+		//contactsTable.
+		//contactsTable.setVisible(true);
+	}
+	
 	public static void initialiseContacts(List<Succ.Message.UserStatus> users) {
 		Log.info("Creating contacts");
 		String [] columns = {"Uzytkownik", "ID", "Status"};
-		Object [][] data = new Object[users.size()][3];
+		data = new Object[users.size()][3];
 	
 		for(int i =0; i < users.size(); i++) {
 			Log.info("Adding user: " + users.get(i).getUsername());
@@ -203,8 +239,9 @@ public class GUI {
 		//mainWindow.add(new JButton("Shite"));
 		
 		tabbedPane = new JTabbedPane();
-		JComponent panel1 = makeContactsTable();
-		tabbedPane.addTab("Kontakty", null, panel1,
+		contactsPanel = makeContactsTable();
+		
+		tabbedPane.addTab("Kontakty", null, contactsPanel,
 		                  "To be Filled");
 		tabbedPane.setMnemonicAt(0, KeyEvent.VK_1);
 
@@ -332,7 +369,7 @@ public class GUI {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				login(loginBox.getText(), passwordBox.getPassword());
+				
 				isLogged = logic.connectToServer(loginBox.getText(), new String(passwordBox.getPassword()));
 				Log.success("Logged is: " + isLogged);
 				
@@ -384,18 +421,22 @@ public class GUI {
 					
 					@Override
 					public void actionPerformed(ActionEvent e) {
-						if(registerPassBox.getPassword().equals(registerPassBoxCheck.getPassword())) {
+						Log.info("Sending request to register");
+						if(new String(registerPassBox.getPassword())
+								.equals(
+										new String(registerPassBoxCheck.getPassword()))) {
+							Log.success("Registration data is in order");
 							register(
 									registerNickBox.getText(),
 									registerIDBox.getText(),
 									registerEmailBox.getText(),
 									registerPassBox.getPassword());
 						}
-						registerWindow.setVisible(false);
+						/*registerWindow.setVisible(false);
 						registerWindow.dispose();
 						mainWindow.setVisible(true);
 						guiSounds.prepareSound("startup");
-						guiSounds.playSound("startup");
+						guiSounds.playSound("startup");*/
 					}
 				});
 				signin.addActionListener(new ActionListener() {
@@ -459,23 +500,35 @@ public class GUI {
 	public JComponent makeSearchWindow() {
 		JPanel panel = new JPanel();
 		panel.setLayout(new FlowLayout());
-		panel.add(new JLabel("Kogo dodajemy?"));
+		panel.add(new JLabel("Identyfikator"));
 		JTextField searchbox = new JTextField();
-		searchbox.setPreferredSize(new Dimension(200, 25));
+		searchbox.setPreferredSize(new Dimension(150, 25));
 		//loginBox.setPreferredSize(new Dimension(350, 25));
 		panel.add(searchbox);
+		JButton remove = new JButton("Zerwij");
+		remove.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				removeContact(searchbox.getText());
+				
+			}
+		});
+		
+		
 		JButton search = new JButton("Poczuj przyjazn!");
 		search.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
+				Log.info("Searching for: " + searchbox.getText());
 				logic.searchContact(searchbox.getText());
 			}
 		});
 		
 		panel.add(search);
-		
+		panel.add(remove);
 		return panel;
 	}
 	
@@ -504,6 +557,7 @@ public class GUI {
 	}
 	public static void registrationStatus(boolean status) {
 		JFrame dialogWindow = new JFrame("Registration status");
+		dialogWindow.setLayout(new FlowLayout());
 		dialogWindow.setPreferredSize(new Dimension(400, 300));
 	
 		JLabel logo = new JLabel(new ImageIcon("./src/media/logo.png"));
@@ -518,7 +572,7 @@ public class GUI {
 			ok.setText("ok :)");
 		}
 		else {
-			message.setText("Sorry, could not put You on the list :(");
+			message.setText("Try different e-mail / ID :(");
 			ok.setText("ok :(");
 		}
 		
@@ -532,14 +586,53 @@ public class GUI {
 			}
 		});
 		dialogWindow.add(ok);
-		
+		dialogWindow.pack();
 		dialogWindow.setVisible(true);
 		
 	}
+	
 	public void register(String nick, String ID, String email, char[] password) {
 		logic.registerUser(nick, email, ID, new String(password));
 	}
-	public void login(String nick, char[] password) {
-
+	
+	public static void removeContact(String id) {
+		logic.removeContact(id);
+		Object [][]temp = new Object[data.length -1][3];
+		int currentRow = 0;
+		for(Object[] line : data) {
+			if(!((String)line[1]).equals(id)) {
+				temp[currentRow][0] = line[0];
+				temp[currentRow][1] = line[1];
+				temp[currentRow][2] = line[2];
+				currentRow++;
+			}
+		}
+		contactsPanel.remove(contactsTable);
+		contactsTable = new JTable(data, new String[] {"Uzytkownik", "ID", "Status"});
+		contactsPanel.add(contactsTable);
+		contactsTable.repaint();
+		contactsPanel.repaint();
+	}
+	
+	public static void updateContactStatus(String name, String id, String status) {
+		if(isContact(id)) {
+			Log.info("Updating " + id + "with " + status);
+			for(Object [] line : data) {
+				if(((String)(line[1])).equals(id)) {
+					line[2] = status;
+				}
+			}
+			contactsTable.repaint();	
+		}else {
+			addContactToTable(name, id, status);
+			
+			Log.info("kjasgkashf");
+			contactsTable.repaint();
+			contactsTable.invalidate();
+			contactsTable.revalidate();
+			contactsPanel.revalidate();
+			contactsPanel.repaint();
+			
+		}		
 	}
 }
