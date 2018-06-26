@@ -384,6 +384,7 @@ public class GUI {
 					guiSounds.prepareSound("startup");
 					guiSounds.playSound("startup");
 					logic.start();	
+					mainWindow.setName("DiscoPoloRD: "+loginBox.getText());
 				}
 				
 			}
