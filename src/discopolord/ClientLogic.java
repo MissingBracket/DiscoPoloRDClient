@@ -77,6 +77,7 @@ public class ClientLogic extends Thread{
 				
 	}
 	public void registerUser(String nick, String id, String email, String password) {
+		//logic.registerUser(nick, email, ID, new String(password));
 		Log.info("Registration form sending");
 		sendMessage(Succ.Message.newBuilder()
 				.setMessageType(MessageType.REGISTER)

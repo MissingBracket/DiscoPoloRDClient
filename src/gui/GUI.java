@@ -66,7 +66,7 @@ public class GUI {
 	}
 	
 	public static void callAccepted(int port, String addr, String who) {
-		JFrame callFrame = new JFrame("Speaking with " + who);
+		JFrame callFrame = new JFrame("Rozmawiasz z " + who);
 		if(!isInCall)
 		{	
 			callFrame.setSize(450, 700);
@@ -160,7 +160,7 @@ public class GUI {
 		if(pickedUp) {
 			isInCall=true;
 			if(isCalling) {
-				info.setText("Connected! Remember to listen");
+				info.setText("Po³¹czono! Nadawaj!");
 				guiSounds.stopPlaying("dialing");
 			}
 			else {
@@ -177,15 +177,15 @@ public class GUI {
 	}
 	
 	public static void receivingCall(int port, String addr, String who) {
-		callingNotifier = new JFrame("Incoming call from " + who);
+		callingNotifier = new JFrame("Dzwoni do Ciebie " + who);
 		callingNotifier.setSize(400, 300);
 		callingNotifier.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		callingNotifier.setLayout(new FlowLayout());
 		JLabel logo = new JLabel(new ImageIcon("./src/media/logo.png"));
 		logo.setPreferredSize(new Dimension(400, 200));
 		callingNotifier.add(logo);		
-		JButton acc = new JButton("Pick up");
-		JButton den = new JButton("Deny");
+		JButton acc = new JButton("Odbierz");
+		JButton den = new JButton("Odrzuæ");
 		guiSounds.prepareSound("dialing");
 		guiSounds.playSound("dialing");
 		acc.addActionListener(new ActionListener() {
@@ -193,7 +193,7 @@ public class GUI {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				logic.acceptConversation(freePort);
-				den.setText("Hang up");				
+				den.setText("Zakoñcz");				
 			}
 		});
 		
@@ -242,18 +242,18 @@ public class GUI {
 		contactsPanel = makeContactsTable();
 		
 		tabbedPane.addTab("Kontakty", null, contactsPanel,
-		                  "To be Filled");
+		                  "Przegl¹daj kontakty");
 		tabbedPane.setMnemonicAt(0, KeyEvent.VK_1);
 
 		JComponent panel2 = makeSearchWindow(); 
 				//makeTextPanel("Panel #2");
-		tabbedPane.addTab("Szukaj", null, panel2,
-		                  "To be filled");
+		tabbedPane.addTab("Dodaj", null, panel2,
+		                  "Dodaj kontakt");
 		tabbedPane.setMnemonicAt(1, KeyEvent.VK_2);
 
 		JComponent panel3 = makeTextPanel("Panel #3");
 		tabbedPane.addTab("Ustawienia", null, panel3,
-		                  "To be Filled");
+		                  "NIE_ZAIMPLEMENTOWANO");
 		tabbedPane.setMnemonicAt(2, KeyEvent.VK_3);
 
 		JComponent panel4 = makeTextPanel(
@@ -263,16 +263,16 @@ public class GUI {
 		panel4.add(new JLabel(new ImageIcon("./src/media/polbud.png")));
 		panel4.add(new TextArea("Projekt Komunikatora G³osowego\nWykonanie:\n\tDariusz Krajewski - klient\n\tKrystian Minta - server"));
 		tabbedPane.addTab("O projekcie", null, panel4,
-		                      "Does nothing at all");
+		                      "Informacje o programie");
 		tabbedPane.setMnemonicAt(3, KeyEvent.VK_4);
 		mainWindow.add(tabbedPane);
 	}
 	
 	public void showCallingDialog() {
-		JFrame callDialog = new JFrame("Incoming Call");
+		JFrame callDialog = new JFrame("Ktoœ dzwoni");
 		callDialog.setPreferredSize(new Dimension(400, 400));
 		callDialog.setLayout(new FlowLayout());		
-		JButton acc = new JButton("Pick up");		
+		JButton acc = new JButton("Odbierz");		
 		
 		acc.addActionListener(new ActionListener() {
 			
@@ -287,7 +287,7 @@ public class GUI {
 	}
 	
 	public JButton getCallButton() {
-		 JButton callButton = new JButton("Call");
+		 JButton callButton = new JButton("Zadzwoñ");
 		 callButton.addActionListener(new ActionListener() {
 			
 			@Override
@@ -299,20 +299,20 @@ public class GUI {
 								contactsTable.getSelectedColumn()).toString());
 				guiSounds.prepareSound("dialing");
 				Log.info(guiSounds.getCurrentSound());
-				callingNotifier = new JFrame("Dialing: " + contactsTable.getValueAt(
+				callingNotifier = new JFrame("Dzwoniê do: " + contactsTable.getValueAt(
 						contactsTable.getSelectedRow(),
 						1).toString());
 				callingNotifier.setLayout(new FlowLayout());
 				
 				callingNotifier.setPreferredSize(new Dimension(400, 300));
-				info = new JTextField("Come on, pickup the phone!");
+				info = new JTextField("No ju¿, Odbieraj!");
 				info.setEditable(false);
 				JLabel logo = new JLabel(new ImageIcon("./src/media/logo.png"));
 				//logo.setPreferredSize(new Dimension(400, 300));
 				callingNotifier.add(logo);
 				callingNotifier.add(info);
 				//	BEGIN
-				JButton hangUp = new JButton("Hang up");
+				JButton hangUp = new JButton("Zakoñcz");
 					hangUp.addActionListener(new ActionListener() {
 						
 						@Override
@@ -352,17 +352,17 @@ public class GUI {
 	
 	
 	public void buildLoginWindows() {
-		this.loggingWindow = new JFrame("Sign in to DiscoPoloRD");
+		this.loggingWindow = new JFrame("Zaloguj siê do DiscoPoloRD");
 		loggingWindow.setSize(400, 400);
 		loggingWindow.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		JTextField loginBox = new JTextField();
 		JPasswordField passwordBox = new JPasswordField();
 		JLabel 	l =  new JLabel("E-mail:"), 
-				p = new JLabel("Password:");
+				p = new JLabel("Has³o:");
 		loginBox.setPreferredSize(new Dimension(350, 25));
 		passwordBox.setPreferredSize(new Dimension(350, 25));
 		
-		JButton login = new JButton("Login");
+		JButton login = new JButton("Loguj");
 		loggingWindow.setLayout(new FlowLayout());
 		
 		login.addActionListener(new ActionListener() {
@@ -385,22 +385,23 @@ public class GUI {
 					guiSounds.playSound("startup");
 					logic.start();	
 					mainWindow.setName("DiscoPoloRD: "+loginBox.getText());
+					mainWindow.repaint();
 				}
 				
 			}
 		});
 		
-		JButton register = new JButton("Register");
+		JButton register = new JButton("Rejestruj");
 		register.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				loggingWindow.dispose();
 				loggingWindow.setVisible(false);
-				registerWindow = new JFrame("Sign up with DiscoPoloRD");
+				registerWindow = new JFrame("Zapisz siê do DiscoPoloRD");
 				registerWindow.setPreferredSize(new Dimension(400, 550));
-				JButton accept = new JButton("Register"),
-						signin = new JButton("Login");
+				JButton accept = new JButton("Rejestruj"),
+						signin = new JButton("Loguj");
 				JTextField registerNickBox = new JTextField(),
 							registerEmailBox = new JTextField(),
 							registerIDBox = new JTextField();
@@ -408,10 +409,10 @@ public class GUI {
 				JPasswordField registerPassBox = new JPasswordField();
 				JPasswordField registerPassBoxCheck = new JPasswordField();
 				JLabel 	r_l =  new JLabel("E-mail:"),
-						r_n = new JLabel("Nick:"),
-						r_id = new JLabel("Unique ID:"),
-						r_p = new JLabel("Password:"),
-						r_pCheck = new JLabel("Repeat Password:");
+						r_n = new JLabel("Pseudonim:"),
+						r_id = new JLabel("Unikatowy ID:"),
+						r_p = new JLabel("Has³o:"),
+						r_pCheck = new JLabel("Powtórz Has³o:");
 				registerNickBox.setPreferredSize(new Dimension(350, 25));
 				registerIDBox.setPreferredSize(new Dimension(350, 25));
 				registerEmailBox.setPreferredSize(new Dimension(350, 25));
@@ -557,7 +558,7 @@ public class GUI {
 		return panel;
 	}
 	public static void registrationStatus(boolean status) {
-		JFrame dialogWindow = new JFrame("Registration status");
+		JFrame dialogWindow = new JFrame("Status rejestracji");
 		dialogWindow.setLayout(new FlowLayout());
 		dialogWindow.setPreferredSize(new Dimension(400, 300));
 	
@@ -569,11 +570,11 @@ public class GUI {
 		JButton ok = new JButton();
 		message.setEditable(false);
 		if(status) {
-			message.setText("Congratz! You can now use DPRD!");
+			message.setText("No i super! Witaj w DPRD!");
 			ok.setText("ok :)");
 		}
 		else {
-			message.setText("Try different e-mail / ID :(");
+			message.setText("E-mail lub ID zajête :(");
 			ok.setText("ok :(");
 		}
 		
@@ -593,7 +594,7 @@ public class GUI {
 	}
 	
 	public void register(String nick, String ID, String email, char[] password) {
-		logic.registerUser(nick, email, ID, new String(password));
+		logic.registerUser(nick, ID, email, new String(password));
 	}
 	
 	public static void removeContact(String id) {
@@ -626,8 +627,6 @@ public class GUI {
 			contactsTable.repaint();	
 		}else {
 			addContactToTable(name, id, status);
-			
-			Log.info("kjasgkashf");
 			contactsTable.repaint();
 			contactsTable.invalidate();
 			contactsTable.revalidate();
