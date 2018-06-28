@@ -7,6 +7,8 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.AlgorithmParameters;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -17,10 +19,7 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-
-import org.omg.PortableInterceptor.SUCCESSFUL;
 
 import com.google.protobuf.ByteString;
 
@@ -53,11 +52,13 @@ public class ClientLogic extends Thread{
 	private boolean connectionSecured = false;
 	//	Constructor
 	public ClientLogic(String addr, int port) throws UnknownHostException, IOException, NoSuchAlgorithmException, NoSuchPaddingException {
+		Log.info("Reached: " + addr + " @ " + port);
 		this.socket=new Socket(addr, port);
 		this.addr=addr;
 		this.port=port;
 		aesCipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
 		aesDeCipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+		
 	}
 	//	Main thread logic
 	public void connectTo(String ID, int port) {
@@ -70,6 +71,8 @@ public class ClientLogic extends Thread{
 						.build())
 				.build());
 	}
+	
+	
 	public void denyCall() {
 		sendMessage(Succ.Message.newBuilder()
 				.setMessageType(MessageType.CL_DEN)
