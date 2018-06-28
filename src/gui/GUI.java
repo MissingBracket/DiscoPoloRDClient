@@ -115,8 +115,7 @@ public class GUI {
 		Log.info("Setting hello message");
 		currentUser = user;
 		currentID = id;
-		loggedUserData = new JTextField("Witaj " + currentUser  + " @ " + currentID);
-		
+		loggedUserData = new JTextField("Witaj " + currentUser  + " @ID: " + currentID + "!");
 	}
 	public static void addContactToTable(String name, String id, String status) {
 		Object [][] temp;
