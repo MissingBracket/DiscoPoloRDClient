@@ -43,12 +43,16 @@ public class GUI {
 	private static Object [][] data;
 	private static JTable contactsTable;
 	private static JComponent contactsPanel;
+	private static JTextField loggedUserData;
 	private static String incAddr;
 	private static int incPort;
 	public static boolean incomingCall;
-	//	Should be found by system
+	private static String currentUser, currentID;
 	
+	//	Should be found by system
 	public static int freePort = 10000;
+	
+	
 	public GUI(double d, ClientLogic cl) {
 		version = d;
 		this.logic = cl;
@@ -106,6 +110,13 @@ public class GUI {
 				return true;
 		}
 		return false;
+	}
+	public static void setLoggedUserData(String user, String id) {
+		Log.info("Setting hello message");
+		currentUser = user;
+		currentID = id;
+		loggedUserData = new JTextField("Witaj " + currentUser  + " @ " + currentID);
+		
 	}
 	public static void addContactToTable(String name, String id, String status) {
 		Object [][] temp;
@@ -233,8 +244,11 @@ public class GUI {
 		mainWindow.setLayout(new FlowLayout());
 		JLabel logo = new JLabel(new ImageIcon("./src/media/logo.png"));
 		logo.setPreferredSize(new Dimension(400, 200));
-		mainWindow.add(logo);		
-		
+		mainWindow.add(logo);	
+		//loggedUserData = new JTextField();
+		loggedUserData.setEditable(false);
+		loggedUserData.setPreferredSize(new Dimension(200, 20));
+		mainWindow.add(loggedUserData);
 		mainWindow.add(getCallButton());
 		
 		//mainWindow.add(new JButton("Shite"));
@@ -609,6 +623,8 @@ public class GUI {
 	}
 	
 	public static void removeContact(String id) {
+		if(!isContact(id))
+			return;
 		logic.removeContact(id);
 		Object [][]temp = new Object[data.length -1][3];
 		int currentRow = 0;

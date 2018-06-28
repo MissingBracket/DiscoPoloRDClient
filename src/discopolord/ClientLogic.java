@@ -131,7 +131,7 @@ public class ClientLogic extends Thread{
 				if(response.getUsersList().isEmpty())
 					GUI.GenericDialogStatus(false, "Nie mo¿na dodaæ u¿ytkownika");
 				else {
-					GUI.GenericDialogStatus(true, "Teraz mo¿ecie porozmawiaæ");
+					//GUI.GenericDialogStatus(true, "Teraz mo¿ecie porozmawiaæ");
 					GUI.updateContactStatus(
 							response.getUsersList().get(0).getUsername(),
 							response.getUsersList().get(0).getIdentifier(), 
@@ -265,6 +265,8 @@ public class ClientLogic extends Thread{
 				if(response != null && !response.getMessageType().equals(MessageType.AUTH)) {
 					throw new IOException("User not authorised");
 				}
+				GUI.setLoggedUserData(response.getUsersList().get(0).getUsername(), 
+						response.getUsersList().get(0).getIdentifier());
 				//	REQUEST CONTACTS LIST
 				Log.info("Sending cList req");
 				sendMessage(Succ.Message.newBuilder()
