@@ -424,9 +424,9 @@ public class GUI {
 				JPasswordField registerPassBox = new JPasswordField();
 				JPasswordField registerPassBoxCheck = new JPasswordField();
 				JLabel 	r_l =  new JLabel("E-mail:"),
-						r_n = new JLabel("Pseudonim:"),
-						r_id = new JLabel("Unikatowy ID:"),
-						r_p = new JLabel("Has³o:"),
+						r_n = new JLabel("Pseudonim (> 5 znaków):"),
+						r_id = new JLabel("Unikatowy ID(> 5 znaków):"),
+						r_p = new JLabel("Has³o (> 8 znaków):"),
 						r_pCheck = new JLabel("Powtórz Has³o:");
 				registerNickBox.setPreferredSize(new Dimension(350, 25));
 				registerIDBox.setPreferredSize(new Dimension(350, 25));
