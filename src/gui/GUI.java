@@ -224,9 +224,9 @@ public class GUI {
 		incPort=port;
 	}
 	
-	public void SetupMainWindow() {
+	public void SetupMainWindow(String username) {
 
-		mainWindow = new JFrame("DiscoPoloRD v: " + version);
+		mainWindow = new JFrame("DiscoPoloRD v: " + username);
 		mainWindow.setSize(450, 700);
 		mainWindow.getContentPane().setBackground(Color.DARK_GRAY);
 		mainWindow.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
@@ -375,12 +375,12 @@ public class GUI {
 				Log.success("Logged is: " + isLogged);
 				
 				if(!isLogged) {					
-					//buildLoginWindows();					
+					GenericDialogStatus(false, "Logowanie nie uda³o siê");			
 				}
 				else {
 					loggingWindow.setVisible(false);
 					loggingWindow.dispose();
-					SetupMainWindow();
+					SetupMainWindow(loginBox.getText());
 					mainWindow.setVisible(true);
 					guiSounds.prepareSound("startup");
 					guiSounds.playSound("startup");
