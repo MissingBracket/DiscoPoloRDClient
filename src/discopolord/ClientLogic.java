@@ -90,9 +90,9 @@ public class ClientLogic extends Thread{
 				.build());
 		Succ.Message response = getMessage();
 		if(response.getMessageType() == MessageType.REGISTRATION_SUCC) {
-			GUI.registrationStatus(true);
+			GUI.GenericDialogStatus(true, "No i super! Witaj w DPRD!");
 		}else {
-			GUI.registrationStatus(false);
+			GUI.GenericDialogStatus(false, "E-mail lub ID zajête :(");
 		}
 	}
 	
@@ -125,10 +125,16 @@ public class ClientLogic extends Thread{
 				break;
 			case C_UPD:
 				Log.info("Received status update prompt");
-				GUI.updateContactStatus(
-						response.getUsersList().get(0).getUsername(),
-						response.getUsersList().get(0).getIdentifier(), 
-						response.getUsersList().get(0).getStatus().toString());
+				if(response.getUsersList().isEmpty())
+					GUI.GenericDialogStatus(false, "Nie mo¿na dodaæ u¿ytkownika");
+				else {
+					GUI.GenericDialogStatus(true, "Teraz mo¿ecie porozmawiaæ");
+					GUI.updateContactStatus(
+							response.getUsersList().get(0).getUsername(),
+							response.getUsersList().get(0).getIdentifier(), 
+							response.getUsersList().get(0).getStatus().toString());
+				}
+					
 				break;
 			
 			default:

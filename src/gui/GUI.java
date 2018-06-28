@@ -9,6 +9,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -423,17 +424,26 @@ public class GUI {
 					
 					@Override
 					public void actionPerformed(ActionEvent e) {
-						Log.info("Sending request to register");
-						if(new String(registerPassBox.getPassword())
-								.equals(
-										new String(registerPassBoxCheck.getPassword()))) {
+						
+						Pattern VALID_EMAIL_ADDRESS_REGEX = 
+							    Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
+						if(new String(registerPassBox.getPassword()).equals(
+							new String(registerPassBoxCheck.getPassword())) &&
+								new String(registerPassBox.getPassword()).length() > 7 &&
+								registerNickBox.getText().length() > 5 &&
+								registerIDBox.getText().length() > 5 &&
+								VALID_EMAIL_ADDRESS_REGEX.matcher(registerEmailBox.getText()).find() == true) {
+							
 							Log.success("Registration data is in order");
+							Log.info("Sending request to register");
 							register(
 									registerNickBox.getText(),
 									registerIDBox.getText(),
 									registerEmailBox.getText(),
 									registerPassBox.getPassword());
 						}
+						else
+							GenericDialogStatus(false, "Sprawdz dane rejestracji");
 						/*registerWindow.setVisible(false);
 						registerWindow.dispose();
 						mainWindow.setVisible(true);
@@ -557,7 +567,8 @@ public class GUI {
 		panel.add(contactsTable);
 		return panel;
 	}
-	public static void registrationStatus(boolean status) {
+	
+	public static void GenericDialogStatus(boolean status, String statusMessage) {
 		JFrame dialogWindow = new JFrame("Status rejestracji");
 		dialogWindow.setLayout(new FlowLayout());
 		dialogWindow.setPreferredSize(new Dimension(400, 300));
@@ -570,11 +581,11 @@ public class GUI {
 		JButton ok = new JButton();
 		message.setEditable(false);
 		if(status) {
-			message.setText("No i super! Witaj w DPRD!");
+			message.setText(statusMessage);
 			ok.setText("ok :)");
 		}
 		else {
-			message.setText("E-mail lub ID zajête :(");
+			message.setText(statusMessage);
 			ok.setText("ok :(");
 		}
 		
